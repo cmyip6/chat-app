@@ -22,6 +22,12 @@ export default function Messages() {
     }
   }, [dispatch, selected])
 
+  useEffect(()=>{
+    if ( selected === null && chatroomList) {
+      dispatch(setSelectedChatroomAction(chatroomList[0].chatroomId))
+    }
+  },[])
+
   function handleBlur(chatroomId: number, newName: string, originalName?: string) {
     if (originalName !== newName && newName.length) {
       dispatch(editChatroomName(chatroomId, newName))
@@ -95,10 +101,10 @@ export default function Messages() {
                 <Button
                   variant='subtle'
                   style={{ position: 'absolute', top: '0px', right: '5px', padding: '0px' }}
+                  onClick={() => handleDelete(chatroom.chatroomId, userId!)}
                 >
                   <IconX
                     color={selected === chatroom.chatroomId ? 'white' : undefined}
-                    onClick={() => handleDelete(chatroom.chatroomId, userId!)}
                     size={15}
                   />
                 </Button>

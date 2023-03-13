@@ -13,6 +13,7 @@ type Chatroom = {
         participationId: number,
         isDeleted: boolean
     }[],
+    messageList: MessageList
 }
 
 type Message = {
@@ -30,17 +31,19 @@ export type MessageList = Message[]
 
 
 export interface MessagesState {
-    messageList: MessageList | null,
     chatroomList: ChatroomList | null,
     selectedChatroom: number | null,
     editChatroomName: number | null,
 }
 
 const initialState: MessagesState = {
-    messageList: null,
     chatroomList: null,
     selectedChatroom: null,
     editChatroomName: null,
+};
+
+const clearChatroomList: CaseReducer<MessagesState> = (state) => {
+    state.chatroomList = null
 };
 
 const getChatroomList: CaseReducer<MessagesState, PayloadAction<ChatroomList>> = (state, action) => {
@@ -69,15 +72,26 @@ const editChatroomName: CaseReducer<MessagesState, PayloadAction<{chatroomId: nu
 
 const exitChatroom: CaseReducer<MessagesState, PayloadAction<number>> = (state, action) => {
     state.chatroomList = state.chatroomList!.filter(chatroom=> chatroom.chatroomId !== action.payload)
-    state.messageList = []
 };
 
-const sendMessage: CaseReducer<MessagesState, PayloadAction<Message>> = (state, action) => {
-    state.messageList!.push(action.payload);
+const sendMessage: CaseReducer<MessagesState, PayloadAction<{message: Message, chatroomId: number}>> = (state, action) => {
+    for (let chatroom of state.chatroomList!){
+        if(chatroom.chatroomId === action.payload.chatroomId) {
+            if (chatroom.messageList === undefined || null){
+                chatroom.messageList = [action.payload.message]
+            } else {
+                chatroom.messageList.push(action.payload.message);
+            }
+        }
+    }
 };
 
-const getMessages: CaseReducer<MessagesState, PayloadAction<MessageList>> = (state, action) => {
-    state.messageList = action.payload;
+const getMessages: CaseReducer<MessagesState, PayloadAction<{messageList: MessageList, chatroomId: number}>> = (state, action) => {
+    for (let chatroom of state.chatroomList!){
+        if(chatroom.chatroomId === action.payload.chatroomId) {
+            chatroom.messageList = action.payload.messageList
+        }
+    }
 };
 
 const messagesSlice = createSlice({
@@ -91,7 +105,8 @@ const messagesSlice = createSlice({
         editChatroomName,
         sendMessage,
         getMessages,
-        exitChatroom
+        exitChatroom,
+        clearChatroomList
     }
 });
 
@@ -104,6 +119,7 @@ export const {
     sendMessage: sendMessageAction,
     getMessages: getMessagesAction,
     exitChatroom: exitChatroomAction,
+    clearChatroomList: clearChatroomListAction
 } = messagesSlice.actions;
 
 export default messagesSlice.reducer;

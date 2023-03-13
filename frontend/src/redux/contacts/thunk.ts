@@ -1,6 +1,6 @@
 import { showNotification } from '@mantine/notifications';
 import { Dispatch } from '@reduxjs/toolkit';
-import { getState } from '../../store';
+import { getState, socket } from '../../store';
 import { MakeRequest } from '../../utils/requestUtils';
 import { checkUsernameAction, ContactsList, createContactAction, deleteContactAction, editContactNameAction, getContactsListAction, setTargetUserAction } from './slice';
 
@@ -85,7 +85,8 @@ export function getContactList(userId: number) {
 
         if (result.success) {
             dispatch(getContactsListAction(result.contactsList))
-            console.log(result.msg)
+            socket.emit('getOnlineUserList', {contactsList: result.contactsList, socketId: socket.id});
+
         } else {
             showNotification({
                 title: 'Get Contact List Notification',

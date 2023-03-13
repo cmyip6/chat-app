@@ -1,10 +1,11 @@
-import { Button, Card, Input, Tooltip } from '@mantine/core'
-import { IconX } from '@tabler/icons-react'
+import { Button, Card, Divider, Group, Input, Tooltip } from '@mantine/core'
+import { showNotification } from '@mantine/notifications'
+import { IconPointFilled, IconX } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
-import { setEditModeAction } from '../redux/contacts/slice'
+import { setEditModeAction, toggleOnlineAction } from '../redux/contacts/slice'
 import { deleteContact, editContactName } from '../redux/contacts/thunk'
 import { createChatroom, getChatroomList } from '../redux/messages/thunk'
-import { useAppDispatch, useAppSelector } from '../store'
+import { socket, useAppDispatch, useAppSelector } from '../store'
 
 export default function Contacts() {
   const dispatch = useAppDispatch()
@@ -14,7 +15,38 @@ export default function Contacts() {
   const [editName, setEditName] = useState('')
 
   useEffect(() => {
-    userId && dispatch(getChatroomList(userId))
+
+    if (!contactList || !userId) return
+    socket.on('loginResponse', (user) => {
+      if (contactList.find(contact=>contact.contactUsername === user.username)?.contactUsername) {
+        dispatch(toggleOnlineAction({ username: user.username, isOnline: true }))
+      }
+      // if (contactList.filter(contact => contact.contactUsername === user.username).length) {
+      //   const contact = contactList.find(contact => contact.contactUsername === user.username)
+
+      //   showNotification({
+      //     message: (contact?.nickname || contact?.contactUsername) + ' is Online',
+      //     icon: <IconPointFilled />,
+      //     color: 'green'
+      //   })
+      // }
+    });
+
+    socket.on('logoutResponse', (user) => {
+      if (contactList.find(contact=>contact.contactUsername === user.username)) {
+        dispatch(toggleOnlineAction({ username: user.username, isOnline: false }))
+      }
+      // if (contactList.filter(contact => contact.contactUsername === user.username).length) {
+      //   const contact = contactList.find(contact => contact.contactUsername === user.username)
+
+      //   showNotification({
+      //     message: (contact?.nickname || contact?.contactUsername) + ' is Offline',
+      //     icon: <IconPointFilled />,
+      //     color: 'red'
+      //   })
+      // }
+    });
+
   }, [contactList])
 
   function handleDelete(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
@@ -42,29 +74,33 @@ export default function Contacts() {
 
   return (
     <div id='content-container' style={{ overflow: 'auto', height: '75vh' }}>
-      {contactList !== null && contactList.map(contact => {
-        return <div key={contact.contactId} style={{ position: 'relative'}}>
+      <Divider labelPosition='center' my='md' label='Online' color={'dark'} />
+      {contactList !== null && contactList.filter(contact=>contact.isOnline).map(contact => {
+        return <div key={contact.contactId} style={{ position: 'relative' }}>
           <Tooltip color="blue" label='Single-click to open conversation'>
             <Tooltip color="blue" position="bottom" label='Double-click to edit name'>
               <Card
                 shadow="sm"
                 radius="md"
-                onClick={()=> dispatch(createChatroom([contact.contactUsername]))}
+                onClick={() => dispatch(createChatroom([contact.contactUsername]))}
                 onDoubleClick={() => handleDoubleClick(contact.contactId, contact.nickname || contact.contactUsername)}
                 withBorder
               >
-                {editTarget === contact.contactId ?
-                  <Input.Wrapper label="Change Name">
-                    <Input
-                      value={editName}
-                      autoFocus
-                      onKeyDown={(e) => handleKeydown(e.key, contact.contactId)}
-                      onChange={(e) => setEditName(e.currentTarget.value)}
-                      onBlur={() => handleBlur(contact.contactId)}
-                    />
-                  </Input.Wrapper> :
-                  contact.nickname || contact.contactUsername
-                }
+                <Group position="left" mt="md" mb="xs">
+                  <IconPointFilled style={{ color: contact.isOnline ? 'green' : 'darkred' }} />
+                  {editTarget === contact.contactId ?
+                    <Input.Wrapper label="Change Name">
+                      <Input
+                        value={editName}
+                        autoFocus
+                        onKeyDown={(e) => handleKeydown(e.key, contact.contactId)}
+                        onChange={(e) => setEditName(e.currentTarget.value)}
+                        onBlur={() => handleBlur(contact.contactId)}
+                      />
+                    </Input.Wrapper> :
+                    contact.nickname || contact.contactUsername
+                  }
+                </Group>
 
                 <div style={{ position: 'absolute', right: '10px', top: '20px' }}>
                   <Button
@@ -81,6 +117,50 @@ export default function Contacts() {
           </Tooltip>
         </div>
       })}
+      <Divider labelPosition='center' my='md' label='Offline' color={'dark'} />
+      {contactList !== null && contactList.filter(contact=> contact.isOnline !== true).map(contact => {
+        return <div key={contact.contactId} style={{ position: 'relative' }}>
+          <Tooltip color="blue" label='Single-click to open conversation'>
+            <Tooltip color="blue" position="bottom" label='Double-click to edit name'>
+              <Card
+                shadow="sm"
+                radius="md"
+                onClick={() => dispatch(createChatroom([contact.contactUsername]))}
+                onDoubleClick={() => handleDoubleClick(contact.contactId, contact.nickname || contact.contactUsername)}
+                withBorder
+              >
+                <Group position="left" mt="md" mb="xs">
+                  <IconPointFilled style={{ color: contact.isOnline ? 'green' : 'darkred' }} />
+                  {editTarget === contact.contactId ?
+                    <Input.Wrapper label="Change Name">
+                      <Input
+                        value={editName}
+                        autoFocus
+                        onKeyDown={(e) => handleKeydown(e.key, contact.contactId)}
+                        onChange={(e) => setEditName(e.currentTarget.value)}
+                        onBlur={() => handleBlur(contact.contactId)}
+                      />
+                    </Input.Wrapper> :
+                    contact.nickname || contact.contactUsername
+                  }
+                </Group>
+
+                <div style={{ position: 'absolute', right: '10px', top: '20px' }}>
+                  <Button
+                    value={contact.contactId}
+                    variant='subtle'
+                    onClick={(e) => handleDelete(e)}
+                    style={{ width: '20px', height: '20px', padding: '0px' }}
+                  >
+                    <IconX />
+                  </Button>
+                </div>
+              </Card>
+            </ Tooltip>
+          </Tooltip>
+        </div>
+      })}
+
     </div>
   )
 

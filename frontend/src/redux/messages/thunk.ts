@@ -1,6 +1,6 @@
 import { showNotification } from '@mantine/notifications';
 import { Dispatch } from '@reduxjs/toolkit';
-import { getState } from '../../store';
+import { getState, socket } from '../../store';
 import { MakeRequest } from '../../utils/requestUtils';
 import { ChatroomList, createChatroomAction, editChatroomNameAction, exitChatroomAction, getChatroomListAction, getMessagesAction, MessageList, sendMessageAction, setSelectedChatroomAction } from './slice';
 
@@ -49,6 +49,7 @@ export function createChatroom(nameList: string[], chatroomName?: string) {
                 ownerName: self!,
                 isGroup: result.isGroup,
                 participants: result.participants,
+                messageList: []
             }
             dispatch(createChatroomAction(payload));
         } 
@@ -103,7 +104,8 @@ export function sendMessage(userId: number, selectedChatroom: number, text: stri
                 createdAt: result.data.created_at
             }
 
-            dispatch(sendMessageAction(payload));
+            dispatch(sendMessageAction({message: payload, chatroomId: selectedChatroom}));
+            socket.emit('sendMessage', selectedChatroom); 
         } 
     };
 }
@@ -120,7 +122,7 @@ export function getMessages(chatroomId: number) {
         >(`/messages/${chatroomId}`);
 
         if (result.success) {
-            dispatch(getMessagesAction(result.messageList))
+            dispatch(getMessagesAction({messageList: result.messageList, chatroomId}))
             console.log(result.msg)
         } else {
             showNotification({
@@ -144,10 +146,10 @@ export function getChatroomList(userId: number) {
 
         if (result.success) {
             dispatch(getChatroomListAction(result.chatroomList))
-            if (result.chatroomList.length){
-                dispatch(setSelectedChatroomAction(result.chatroomList[0].chatroomId))
+            if (result.chatroomList?.length){
+                console.log(result.chatroomList)
+                socket.emit('joinChatroom', result.chatroomList); 
             }
-            console.log(result.msg)
         } else {
             showNotification({
                 title: 'Get Contact List Notification',

@@ -1,0 +1,70 @@
+import { Socket } from "socket.io";
+import { io } from "../app";
+
+type User = {
+    username?: string,
+    userId: number,
+    socketId: string
+}
+
+type Contacts = {
+    contactId: number,
+    nickname: string | undefined,
+    isOnline?: boolean,
+    contactUsername: string,
+}
+
+export type ContactsList = Contacts[]
+
+let userList: User[] = []
+
+export const socketLogic = (socket: Socket) => {
+
+    socket.on('getOnlineUserList', ({ socketId, contactsList }) => {
+        if (userList?.length && contactsList?.length) {
+            for (let contact of contactsList) {
+                for (let user of userList) {
+                    if (user.username === contact.contactUsername) {
+                        contact.isOnline = true
+                        break
+                    }
+                }
+            }
+            io.to(socketId).emit('getOnlineUserListResponse', contactsList);
+        } else {
+            return
+        }
+    });
+
+    socket.on('joinChatroom', (chatroomList) => {
+        for(let chatroom of chatroomList) {
+            socket.join(`chatroom-${chatroom.chatroomId}`)
+        }
+    });
+
+    socket.on('sendMessage', (chatroomId) => {
+        io.to(`chatroom-${chatroomId}`).emit('sendMessageResponse', chatroomId)
+    });
+
+
+    socket.on('login', (user) => {
+        userList.push(user)
+        io.emit('loginResponse', user);
+    });
+
+    socket.on('logout', (user) => {
+        userList = userList.filter(user => user.socketId !== socket.id)
+        io.emit('logoutResponse', user);
+    });
+
+    socket.on('disconnect', () => {
+        const [user] = userList.filter(user => user.socketId === socket.id)
+        console.log(user)
+        if (user) {
+            io.emit('logoutResponse', user);
+            userList = userList.filter(user => user.socketId !== socket.id)
+        }
+    });
+
+    return socketLogic;
+}

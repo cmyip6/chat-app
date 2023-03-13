@@ -181,6 +181,7 @@ export class MessagesService {
                 }
 
                 chatroom.participants = participants
+                chatroom.messageList = await this.getMessages(chatroom.chatroomId)
             }
 
             await txn.commit();

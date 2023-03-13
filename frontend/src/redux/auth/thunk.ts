@@ -1,7 +1,9 @@
 import { Dispatch } from '@reduxjs/toolkit';
 import { showNotification } from '@mantine/notifications';
-import { PREFIX } from '../../store';
+import { getState, PREFIX, socket } from '../../store';
 import { loginAction, logoutAction } from './slice';
+import { clearContactsListAction } from '../contacts/slice';
+import { clearChatroomListAction } from '../messages/slice';
 
 export function login(username: string, password: string) {
     return async (dispatch: Dispatch) => {
@@ -18,6 +20,7 @@ export function login(username: string, password: string) {
 
         const result = await res.json()
         if (result.success) {
+            
             const payload = {
                 userId: result.userId,
                 username: result.username,
@@ -25,6 +28,12 @@ export function login(username: string, password: string) {
             }
             localStorage.setItem(`${PREFIX}token`, result.token);
             dispatch(loginAction(payload));
+            
+            socket.emit('login', {
+                username,
+                userId: result.userId,
+                socketId: socket.id,
+              });
         } else {
             dispatch(logoutAction())
         }
@@ -63,19 +72,28 @@ export function signUp(username: string, password: string) {
             dispatch(loginAction(payload));
         } else {
             logout()
+            showNotification({
+                title: 'Login notification',
+                message: result.msg,
+                autoClose: 2000
+            });
         }
-        showNotification({
-            title: 'Login notification',
-            message: result.msg,
-            autoClose: 2000
-        });
     };
 }
 
 export function logout() {
     return async (dispatch: Dispatch) => {
+        const userId = getState().auth.userId
+        const username = getState().auth.username
         localStorage.removeItem(`${PREFIX}token`);
-        dispatch(logoutAction());
+        dispatch(logoutAction())
+        dispatch(clearContactsListAction())
+        dispatch(clearChatroomListAction())
+        socket.emit('logout', {
+            userId,
+            username,
+            socketId: socket.id,
+          });
     };
 }
 
@@ -99,6 +117,12 @@ export function retrieveLogin(token: string) {
                 token
             }
             dispatch(loginAction(payload));
+
+            socket.emit('login', {
+                username: result.username,
+                userId: result.userId,
+                socketId: socket.id,
+              });
         } else {
             logout();
         }
