@@ -8,9 +8,10 @@ export class MessagesController {
 
 		try {
 			const chatroomId = req.body.chatroomId;
+			const userId = req.body.userId
             const chatroomName = req.body.chatroomName
             
-            await this.messagesService.editChatroomName(chatroomId, chatroomName)
+            await this.messagesService.editChatroomName(chatroomId, chatroomName, userId)
             
             res.json({
                 success: true,
@@ -26,13 +27,34 @@ export class MessagesController {
 		}
 	};
 
+	exitChatroom = async (req: Request, res: Response) => {
+
+		try {
+			const chatroomId = req.body.chatroomId;
+            const participantId = req.body.participantId
+            
+            await this.messagesService.exitChatroom(chatroomId, participantId)
+            
+            res.json({
+                success: true,
+                msg: 'Chatroom Quitted',
+            });
+                
+		} catch (e) {
+			console.error(e);
+			res.status(500).json({
+				msg: 'Something Went wrong during updating database'
+			});
+		}
+	};
+
     createChatroom = async (req: Request, res: Response) => {
 
 		try {
 			const nameList = req.body.fullNameList;
             const ownerId = req.body.owner;
             const chatroomName = req.body.chatroomName
-			const isGroup = nameList > 2
+			const isGroup = nameList.length > 2
 
 			if (nameList.length === 2){
 				const checkExistingRoomId = await this.messagesService.checkChatroom(nameList)

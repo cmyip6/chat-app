@@ -10,7 +10,8 @@ type Chatroom = {
         participantId: number
         participantNickname?: string
         participantName: string,
-        participationId: number
+        participationId: number,
+        isDeleted: boolean
     }[],
 }
 
@@ -20,6 +21,7 @@ type Message = {
     senderUsername: string,
     content: string,
     isDeleted: boolean,
+    isSystemMessage: boolean,
     createdAt: string
 }
 
@@ -65,6 +67,11 @@ const editChatroomName: CaseReducer<MessagesState, PayloadAction<{chatroomId: nu
     }
 };
 
+const exitChatroom: CaseReducer<MessagesState, PayloadAction<number>> = (state, action) => {
+    state.chatroomList = state.chatroomList!.filter(chatroom=> chatroom.chatroomId !== action.payload)
+    state.messageList = []
+};
+
 const sendMessage: CaseReducer<MessagesState, PayloadAction<Message>> = (state, action) => {
     state.messageList!.push(action.payload);
 };
@@ -83,7 +90,8 @@ const messagesSlice = createSlice({
         editChatroomMode,
         editChatroomName,
         sendMessage,
-        getMessages
+        getMessages,
+        exitChatroom
     }
 });
 
@@ -95,6 +103,7 @@ export const {
     editChatroomName: editChatroomNameAction,
     sendMessage: sendMessageAction,
     getMessages: getMessagesAction,
+    exitChatroom: exitChatroomAction,
 } = messagesSlice.actions;
 
 export default messagesSlice.reducer;

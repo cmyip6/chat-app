@@ -9,6 +9,8 @@ export const messagesRoutes = () => {
    messagesRoutes.put('/chatroom', messagesController.editChatroomName)
    messagesRoutes.post('/chatroom', messagesController.createChatroom);
    messagesRoutes.post('/', messagesController.sendMessage);
+   messagesRoutes.delete('/chatroom', messagesController.exitChatroom);
+
    
    return messagesRoutes;
 }

@@ -16,7 +16,7 @@ export default function Login() {
     }
 
     return (
-        <Container className='align-items-center d-flex'>
+        <Container className='align-items-center d-flex' style={{height: '100vh'}}>
             <Form className='w-100' onSubmit={handleSubmit}>
                 <Form.Group>
                     <Form.Label>

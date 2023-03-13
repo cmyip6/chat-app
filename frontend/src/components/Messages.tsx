@@ -1,9 +1,9 @@
 import { Badge, Button, Input, Tooltip } from '@mantine/core'
-import { IconCheck, IconEdit, IconX } from '@tabler/icons-react'
+import { IconCheck, IconX } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 import { ListGroup } from 'react-bootstrap'
 import { editChatroomModeAction, setSelectedChatroomAction } from '../redux/messages/slice'
-import { editChatroomName } from '../redux/messages/thunk'
+import { editChatroomName, exitChatroom } from '../redux/messages/thunk'
 import { useAppDispatch, useAppSelector } from '../store'
 
 export default function Messages() {
@@ -41,9 +41,9 @@ export default function Messages() {
     setEditName("")
   }
 
-  function handleDelete(chatroomId: number) {
-    // dispatch(deleteChatroom(chatroomId))
-
+  function handleDelete(chatroomId: number, userId: number) {
+    dispatch(exitChatroom(chatroomId, userId))
+    dispatch(setSelectedChatroomAction(0))
   }
 
   const handleEditNameKeyDown = (key: string, chatroomId: number) => {
@@ -56,7 +56,7 @@ export default function Messages() {
     <div id='content-container' style={{ overflow: 'auto', height: '75vh' }}>
       <ListGroup variant='flush'>
         {chatroomList && chatroomList.map(chatroom => (
-          <Tooltip key={chatroom.chatroomId} disabled={!chatroom.isGroup} label='Double-click the top to edit chatroom name'>
+          <Tooltip key={chatroom.chatroomId} disabled={!chatroom.isGroup} label={chatroom.chatroomName || "Double Click to Edit Name"}>
             <div style={{ position: 'relative', overflowY: 'hidden', overflowX: 'visible' }}>
               <ListGroup.Item
                 className='text-center'
@@ -85,24 +85,34 @@ export default function Messages() {
                     chatroom.chatroomName}
                 </Badge>}
                 {chatroom.isGroup ?
-                  chatroom.participants.map(participant => (participant.participantNickname || participant.participantName))
+                  chatroom.participants.filter(participant=> participant.isDeleted === false).map(participant => (participant.participantNickname || participant.participantName))
                     .map(name => name === username ? 'You' : name).join(', ') :
                   chatroom.participants.map(participant =>
                     participant.participantId !== userId && (participant.participantNickname || participant.participantName)
                   )
                 }
-                {chatroom.chatroomOwner === userId &&
-                  <Button
-                    variant='subtle'
-                    style={{ position: 'absolute', top: '0px', right: '5px', padding: '0px' }}
-                  >
-                    <IconX
-                      color={selected === chatroom.chatroomId ? 'white' : undefined}
-                      onClick={() => handleDelete(chatroom.chatroomId)}
-                      size={15}
-                    />
-                  </Button>
+
+                <Button
+                  variant='subtle'
+                  style={{ position: 'absolute', top: '0px', right: '5px', padding: '0px' }}
+                >
+                  <IconX
+                    color={selected === chatroom.chatroomId ? 'white' : undefined}
+                    onClick={() => handleDelete(chatroom.chatroomId, userId!)}
+                    size={15}
+                  />
+                </Button>
+
+                {chatroom.isGroup && 
+                  <Badge 
+                    size='xs' 
+                    variant='light'
+                    style={{position: 'absolute', top:'2px', left:'2px', padding:'1px'}}
+                    >
+                      Group
+                  </Badge>
                 }
+
               </ListGroup.Item>
             </div>
           </Tooltip>
