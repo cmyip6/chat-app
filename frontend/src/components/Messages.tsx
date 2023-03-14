@@ -3,8 +3,8 @@ import { IconCheck, IconX } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 import { ListGroup } from 'react-bootstrap'
 import { editChatroomModeAction, setSelectedChatroomAction } from '../redux/messages/slice'
-import { editChatroomName, exitChatroom } from '../redux/messages/thunk'
-import { useAppDispatch, useAppSelector } from '../store'
+import { editChatroomName, exitChatroom, getChatroomList } from '../redux/messages/thunk'
+import { socket, useAppDispatch, useAppSelector } from '../store'
 
 export default function Messages() {
   const dispatch = useAppDispatch()
@@ -22,11 +22,18 @@ export default function Messages() {
     }
   }, [dispatch, selected])
 
-  useEffect(()=>{
-    if ( selected === null && chatroomList) {
-      dispatch(setSelectedChatroomAction(chatroomList[0].chatroomId))
-    }
-  },[])
+  useEffect(() => {
+    if (!userId) return
+    socket.on('createChatroomResponse', (chatroom) => {
+      dispatch(getChatroomList(userId))
+    })
+  }, [chatroomList])
+
+  // useEffect(()=>{
+  //   if ( selected === null && chatroomList) {
+  //     dispatch(setSelectedChatroomAction(chatroomList[0].chatroomId))
+  //   }
+  // },[])
 
   function handleBlur(chatroomId: number, newName: string, originalName?: string) {
     if (originalName !== newName && newName.length) {

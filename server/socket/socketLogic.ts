@@ -46,8 +46,31 @@ export const socketLogic = (socket: Socket) => {
         io.to(`chatroom-${chatroomId}`).emit('sendMessageResponse', chatroomId)
     });
 
+    socket.on('createContact', (data) => {
+        for (let user of userList) {
+            if (user.username === data.username){
+                io.to(socket.id).emit('loginResponse', data);
+                break
+            }
+        }
+    });
+
+    socket.on('createChatroom', (chatroom) => {
+        for (let user of chatroom.participants) {
+            for (let onlineUser of userList){
+                if (onlineUser.username === user.participantName){
+                    io.to(onlineUser.socketId).emit('createChatroomResponse', chatroom)
+                }
+            }
+        }
+    });
+
+    socket.on('typing', (data) => {
+        io.to(`chatroom-${data.selectedChatroom}`).emit('typingResponse', data);        
+    });
 
     socket.on('login', (user) => {
+        socket.join(`user-${user.userId}`)
         userList.push(user)
         io.emit('loginResponse', user);
     });
@@ -64,6 +87,7 @@ export const socketLogic = (socket: Socket) => {
             io.emit('logoutResponse', user);
             userList = userList.filter(user => user.socketId !== socket.id)
         }
+        socket.disconnect()
     });
 
     return socketLogic;

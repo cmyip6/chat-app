@@ -5,24 +5,45 @@ import { Form, InputGroup, Button as BootstrapButton } from 'react-bootstrap'
 import { setTargetUserAction } from '../redux/contacts/slice'
 import { createContact } from '../redux/contacts/thunk'
 import { getChatroomList, sendMessage } from '../redux/messages/thunk'
-import { useAppDispatch, useAppSelector } from '../store'
+import { socket, useAppDispatch, useAppSelector } from '../store'
 
 export default function Conversations() {
     const [text, setText] = useState("")
     const dispatch = useAppDispatch()
     const userId = useAppSelector(state => state.auth.userId)!
+    const username = useAppSelector(state => state.auth.username)!
     const selectedChatroom = useAppSelector(state => state.messages.selectedChatroom)!
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const chatroomList = useAppSelector(state => state.messages.chatroomList)
     const [messageList] = chatroomList?.filter(chatroom => chatroom.chatroomId === selectedChatroom) || []
     const contactList = useAppSelector(state => state.contacts.contactsList)
     const lastMessageRef = useRef<HTMLInputElement>(null)
+    const [typing, setTyping] =useState('')
+
+    useEffect(()=>{
+        if (contactList === null) return
+        socket.on('typingResponse', (data)=>{
+            console.log(data.selectedChatroom, selectedChatroom)
+            if (data.selectedChatroom !== selectedChatroom) {
+                return
+            } else if (data.username === username) {
+                return
+            } else {
+                const nickname = contactList.find(contact=>contact.contactUsername === data.username)?.nickname
+                const message = `${nickname || data.username} is typing...`
+    
+                setTyping(message)
+                setTimeout(()=>{setTyping('')},1000)
+                return () => socket.close()
+            }
+        })
+
+    }, [typing, selectedChatroom])
 
     useEffect(() => {
         if (lastMessageRef.current) {
             lastMessageRef.current.scrollIntoView()
         }
-
     }, [messageList])
 
     useEffect(() => {
@@ -40,6 +61,10 @@ export default function Conversations() {
     function handleAddContact(targetId: number) {
         dispatch(setTargetUserAction(targetId))
         dispatch(createContact())
+    }
+
+    function handleTyping() {
+        socket.emit('typing', {username, selectedChatroom})
     }
 
 
@@ -86,6 +111,7 @@ export default function Conversations() {
             </div>
             <Form onSubmit={handleSubmit}>
                 <Form.Group className='m-2'>
+                    <p>{typing}</p>
                     <InputGroup>
                         <Form.Control
                             as='textarea'
@@ -94,6 +120,7 @@ export default function Conversations() {
                             required
                             value={text}
                             aria-describedby="basic-addon2"
+                            onKeyDown={handleTyping}
                             onChange={e => setText(e.currentTarget.value)}
                             style={{ resize: 'none' }}
                         />

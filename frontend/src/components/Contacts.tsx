@@ -18,33 +18,15 @@ export default function Contacts() {
 
     if (!contactList || !userId) return
     socket.on('loginResponse', (user) => {
-      if (contactList.find(contact=>contact.contactUsername === user.username)?.contactUsername) {
+      if (contactList.find(contact => contact.contactUsername === user.username)?.contactUsername) {
         dispatch(toggleOnlineAction({ username: user.username, isOnline: true }))
       }
-      // if (contactList.filter(contact => contact.contactUsername === user.username).length) {
-      //   const contact = contactList.find(contact => contact.contactUsername === user.username)
-
-      //   showNotification({
-      //     message: (contact?.nickname || contact?.contactUsername) + ' is Online',
-      //     icon: <IconPointFilled />,
-      //     color: 'green'
-      //   })
-      // }
     });
 
     socket.on('logoutResponse', (user) => {
-      if (contactList.find(contact=>contact.contactUsername === user.username)) {
+      if (contactList.find(contact => contact.contactUsername === user.username)) {
         dispatch(toggleOnlineAction({ username: user.username, isOnline: false }))
       }
-      // if (contactList.filter(contact => contact.contactUsername === user.username).length) {
-      //   const contact = contactList.find(contact => contact.contactUsername === user.username)
-
-      //   showNotification({
-      //     message: (contact?.nickname || contact?.contactUsername) + ' is Offline',
-      //     icon: <IconPointFilled />,
-      //     color: 'red'
-      //   })
-      // }
     });
 
   }, [contactList])
@@ -75,50 +57,46 @@ export default function Contacts() {
   return (
     <div id='content-container' style={{ overflow: 'auto', height: '75vh' }}>
       <Divider labelPosition='center' my='md' label='Online' color={'dark'} />
-      {contactList !== null && contactList.filter(contact=>contact.isOnline).map(contact => {
+      {contactList !== null && contactList.filter(contact => contact.isOnline).map(contact => {
         return <div key={contact.contactId} style={{ position: 'relative' }}>
-          <Tooltip color="blue" label='Single-click to open conversation'>
-            <Tooltip color="blue" position="bottom" label='Double-click to edit name'>
-              <Card
-                shadow="sm"
-                radius="md"
-                onClick={() => dispatch(createChatroom([contact.contactUsername]))}
-                onDoubleClick={() => handleDoubleClick(contact.contactId, contact.nickname || contact.contactUsername)}
-                withBorder
-              >
-                <Group position="left" mt="md" mb="xs">
-                  <IconPointFilled style={{ color: contact.isOnline ? 'green' : 'darkred' }} />
-                  {editTarget === contact.contactId ?
-                    <Input.Wrapper label="Change Name">
-                      <Input
-                        value={editName}
-                        autoFocus
-                        onKeyDown={(e) => handleKeydown(e.key, contact.contactId)}
-                        onChange={(e) => setEditName(e.currentTarget.value)}
-                        onBlur={() => handleBlur(contact.contactId)}
-                      />
-                    </Input.Wrapper> :
-                    contact.nickname || contact.contactUsername
-                  }
-                </Group>
+          <Card
+            shadow="sm"
+            radius="md"
+            onClick={() => { dispatch(createChatroom([contact.contactUsername])) }}
+            onDoubleClick={() => handleDoubleClick(contact.contactId, contact.nickname || contact.contactUsername)}
+            withBorder
+          >
+            <Group position="left" mt="md" mb="xs">
+              <IconPointFilled style={{ color: contact.isOnline ? 'green' : 'darkred' }} />
+              {editTarget === contact.contactId ?
+                <Input.Wrapper label="Change Name">
+                  <Input
+                    value={editName}
+                    autoFocus
+                    onKeyDown={(e) => handleKeydown(e.key, contact.contactId)}
+                    onChange={(e) => setEditName(e.currentTarget.value)}
+                    onBlur={() => handleBlur(contact.contactId)}
+                  />
+                </Input.Wrapper> :
+                contact.nickname || contact.contactUsername
+              }
+            </Group>
 
-                <div style={{ position: 'absolute', right: '10px', top: '20px' }}>
-                  <Button
-                    value={contact.contactId}
-                    variant='subtle'
-                    onClick={(e) => handleDelete(e)}
-                    style={{ width: '20px', height: '20px', padding: '0px' }}
-                  >
-                    <IconX />
-                  </Button>
-                </div>
-              </Card>
-            </ Tooltip>
-          </Tooltip>
+            <div style={{ position: 'absolute', right: '10px', top: '20px' }}>
+              <Button
+                value={contact.contactId}
+                variant='subtle'
+                onClick={(e) => handleDelete(e)}
+                style={{ width: '20px', height: '20px', padding: '0px' }}
+              >
+                <IconX />
+              </Button>
+            </div>
+          </Card>
         </div>
       })}
       <Divider labelPosition='center' my='md' label='Offline' color={'dark'} />
-      {contactList !== null && contactList.filter(contact=> contact.isOnline !== true).map(contact => {
+      {contactList !== null && contactList.filter(contact => contact.isOnline !== true).map(contact => {
         return <div key={contact.contactId} style={{ position: 'relative' }}>
           <Tooltip color="blue" label='Single-click to open conversation'>
             <Tooltip color="blue" position="bottom" label='Double-click to edit name'>

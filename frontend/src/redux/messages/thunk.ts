@@ -52,14 +52,10 @@ export function createChatroom(nameList: string[], chatroomName?: string) {
                 messageList: []
             }
             dispatch(createChatroomAction(payload));
+            dispatch(setSelectedChatroomAction(result.chatroomId!))
+
+            socket.emit('createChatroom', payload)
         } 
-        if (result.msg !=='Chatroom Existed'){
-            showNotification({
-                title: 'Create Chatroom Notification',
-                message: result.msg,
-                autoClose: 2000
-            });
-        }
     };
 }
 
@@ -147,7 +143,6 @@ export function getChatroomList(userId: number) {
         if (result.success) {
             dispatch(getChatroomListAction(result.chatroomList))
             if (result.chatroomList?.length){
-                console.log(result.chatroomList)
                 socket.emit('joinChatroom', result.chatroomList); 
             }
         } else {

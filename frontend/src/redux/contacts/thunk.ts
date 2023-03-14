@@ -64,6 +64,11 @@ export function createContact(nickname?: string) {
             }
             dispatch(createContactAction(payload));
             dispatch(setTargetUserAction(0))
+
+            socket.emit('createContact', {
+                username: result.contactUsername,
+                userId: user,
+              });
         } 
         showNotification({
             title: 'Create Contact Notification',
