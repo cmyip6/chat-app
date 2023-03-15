@@ -152,4 +152,32 @@ export class MessagesController {
 		}
 	};	
 
+	deleteMessage = async (req: Request, res: Response) => {
+
+		try {
+			const userId = req.body.userId;
+            const messageId = req.body.messageId;
+            
+            const check = await this.messagesService.deleteMessage(userId, messageId)
+
+			if (check) {
+				res.json({
+					success: true,
+					msg: 'Message Deleted',
+				});
+			} else {
+				res.json({
+					success: false,
+					msg: 'Only sender can delete message'
+				})
+			}
+			
+		} catch (e) {
+			console.error(e);
+			res.status(500).json({
+				msg: 'Something Went wrong during deleting message'
+			});
+		}
+	};	
+
 }

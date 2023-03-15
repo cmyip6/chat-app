@@ -46,6 +46,10 @@ export const socketLogic = (socket: Socket) => {
         io.to(`chatroom-${chatroomId}`).emit('sendMessageResponse', chatroomId)
     });
 
+    socket.on('deleteMessage', ({messageId, chatroomId}) => {
+        io.to(`chatroom-${chatroomId}`).emit('deleteMessageResponse', messageId)
+    });
+
     socket.on('createContact', (data) => {
         for (let user of userList) {
             if (user.username === data.username){

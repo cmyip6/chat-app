@@ -1,7 +1,7 @@
 
 import { useAppSelector } from '../store'
 import Conversations from './Conversations'
-import SideBar from './SideBar'
+// import SideBar from './SideBar'
 import SidePanel from './SidePanel'
 
 export default function Home() {
@@ -10,7 +10,7 @@ export default function Home() {
 
   return (
     <div className='d-flex' style={{height:'100vh'}}>
-      <SideBar/>
+      {/* <SideBar/> */}
       <SidePanel/>
       {selectedChatroom && userId && <Conversations/>}
     </div>

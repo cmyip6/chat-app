@@ -2,7 +2,7 @@ import { showNotification } from '@mantine/notifications';
 import { Dispatch } from '@reduxjs/toolkit';
 import { getState, socket } from '../../store';
 import { MakeRequest } from '../../utils/requestUtils';
-import { ChatroomList, createChatroomAction, editChatroomNameAction, exitChatroomAction, getChatroomListAction, getMessagesAction, MessageList, sendMessageAction, setSelectedChatroomAction } from './slice';
+import { ChatroomList, createChatroomAction, deleteMessageAction, editChatroomNameAction, exitChatroomAction, getChatroomListAction, getMessagesAction, MessageList, sendMessageAction, setSelectedChatroomAction } from './slice';
 
 const makeRequest = (token: string) => new MakeRequest(token);
 
@@ -55,6 +55,41 @@ export function createChatroom(nameList: string[], chatroomName?: string) {
             dispatch(setSelectedChatroomAction(result.chatroomId!))
 
             socket.emit('createChatroom', payload)
+        } 
+    };
+}
+
+export function deleteMessage(messageId: number, userId: number) {
+    return async (dispatch: Dispatch) => {
+        const token = getState().auth.token;
+        const chatroomId = getState().messages.selectedChatroom;
+
+        const result = await makeRequest(token!).put<
+            {
+                userId: number;
+                messageId: number;
+            },
+            {
+                success: boolean;
+                data: {
+                    id: number
+                    content: string
+                    is_deleted: boolean
+                    created_at: string
+                    sender_username: string
+                }
+                
+                msg: string;
+            }
+        >(`/messages/`, {
+            userId,
+            messageId,
+        });
+
+        if (result.success) {
+            socket.emit('deleteMessage', {messageId, chatroomId}); 
+
+            dispatch(deleteMessageAction(messageId));
         } 
     };
 }

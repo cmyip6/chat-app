@@ -1,10 +1,11 @@
-import { Badge, Button, Tooltip } from '@mantine/core'
+import { Badge, Button, HoverCard, Tooltip } from '@mantine/core'
 import { IconSend } from '@tabler/icons-react'
 import React, { useEffect, useRef, useState } from 'react'
-import { Form, InputGroup, Button as BootstrapButton } from 'react-bootstrap'
+import { Form, InputGroup, Button as BootstrapButton, Container } from 'react-bootstrap'
 import { setTargetUserAction } from '../redux/contacts/slice'
 import { createContact } from '../redux/contacts/thunk'
-import { getChatroomList, sendMessage } from '../redux/messages/thunk'
+import { deleteMessageAction } from '../redux/messages/slice'
+import { getChatroomList, sendMessage, deleteMessage } from '../redux/messages/thunk'
 import { socket, useAppDispatch, useAppSelector } from '../store'
 
 export default function Conversations() {
@@ -18,27 +19,32 @@ export default function Conversations() {
     const [messageList] = chatroomList?.filter(chatroom => chatroom.chatroomId === selectedChatroom) || []
     const contactList = useAppSelector(state => state.contacts.contactsList)
     const lastMessageRef = useRef<HTMLInputElement>(null)
-    const [typing, setTyping] =useState('')
-    const [roomId, setRoomId] =useState(0)
+    const [typing, setTyping] = useState('')
+    const [roomId, setRoomId] = useState(0)
 
-    useEffect(()=>{
+    useEffect(() => {
         if (contactList === null) return
-        socket.on('typingResponse', (data)=>{
+        socket.on('typingResponse', (data) => {
             console.log(data.selectedChatroom, selectedChatroom)
             if (parseInt(data.selectedChatroom) !== selectedChatroom) {
                 return
             } else if (data.username === username) {
                 return
             } else {
-                const nickname = contactList.find(contact=>contact.contactUsername === data.username)?.nickname
+                const nickname = contactList.find(contact => contact.contactUsername === data.username)?.nickname
                 const message = `${nickname || data.username} is typing...`
                 setRoomId(data.selectedChatroom)
                 setTyping(message)
-                setTimeout(()=>{setTyping('')},1000)
+                setTimeout(() => { setTyping('') }, 1000)
                 return () => socket.close()
             }
         })
+    })
 
+    useEffect(() => {
+        socket.on('deleteMessageResponse', (messageId) => {
+            dispatch(deleteMessageAction(messageId))
+        })
     })
 
     useEffect(() => {
@@ -65,13 +71,18 @@ export default function Conversations() {
     }
 
     function handleTyping(e: React.KeyboardEvent<HTMLInputElement>) {
-        if(e.key==='Enter') {
+        if (e.key === 'Enter') {
             e.preventDefault()
             dispatch(sendMessage(userId, selectedChatroom, text))
             setText('')
         } else {
-            socket.emit('typing', {username, selectedChatroom})
+            socket.emit('typing', { username, selectedChatroom })
         }
+    }
+
+    function handleDeleteMessage(e: React.MouseEvent<HTMLButtonElement>) {
+        e.preventDefault()
+        dispatch(deleteMessage(parseInt(e.currentTarget.value), userId))
     }
 
     return (
@@ -90,10 +101,40 @@ export default function Conversations() {
                                 key={message.messageId}
                                 className={`my-1 d-flex flex-column  ${message.senderId === userId ? 'align-self-end' : ''}`}
                             >
-                                <div className={`rounded px-2 py-1 ${message.isSystemMessage ? 'bg-secondary text-white' : message.senderId === userId ? 'bg-primary text-white' : 'border'}`}>
-                                    {message.isSystemMessage ? <><Badge size='lg' color="red" radius="xs" variant="dot" style={{ color: "white" }}>SYSTEM MESSAGE</Badge>  {message.content}</> : message.content}
-                                </div>
+
+                                {/* Message */}
+                                <HoverCard shadow='xs' openDelay={500}>
+                                    <HoverCard.Target>
+                                        <Container 
+                                            style={{ maxWidth: '400px', height: 'fit-content' }} 
+                                            className={`rounded px-2 py-1 ${message.isSystemMessage || message.isDeleted
+                                                ? 'bg-secondary text-white' : message.senderId === userId 
+                                                ? 'bg-primary text-white' : 'border'}`}>
+                                            {
+                                                message.isSystemMessage ?
+                                                    <><Badge size='lg' color="red" radius="xs" variant="dot" style={{ color: "white" }}>SYSTEM MESSAGE</Badge>  {message.content}</>
+                                                    : message.isDeleted ? <Badge size='lg' radius="xs" variant='subtle' style={{ color: "white" }}>Message Deleted</Badge>
+                                                        : message.content
+                                            }
+                                        </Container>
+                                    </HoverCard.Target>
+                                    {message.senderId === userId &&
+                                        <HoverCard.Dropdown>
+                                            <Button
+                                                value={message.messageId}
+                                                style={{ padding: '0px' }}
+                                                variant='subtle'
+                                                onClick={(e) => handleDeleteMessage(e)}
+                                            >
+                                                Delete Message
+                                            </Button>
+                                        </HoverCard.Dropdown>
+                                    }
+                                </HoverCard>
+
+                                {/* Sender's Name */}
                                 <div className='text-muted small' style={{ textAlign: message.senderId === userId ? 'right' : 'left' }}>
+                                    <Badge size='xs' color="teal" radius="xs">{new Date(message.createdAt).toLocaleTimeString()}</Badge>
                                     {message.senderId === userId ? 'You' :
                                         contactList?.find(contact => contact.contactUsername === message.senderUsername)?.nickname || message.senderUsername
                                     }
@@ -115,7 +156,7 @@ export default function Conversations() {
                     })}
                 </div>
             </div>
-            {roomId === selectedChatroom &&<span className='m-2'>{typing}</span>}
+            {roomId === selectedChatroom && <span className='m-2 text-muted small'>{typing}</span>}
             <Form onSubmit={handleSubmit}>
                 <Form.Group className='m-2'>
                     <InputGroup>

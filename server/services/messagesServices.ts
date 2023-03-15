@@ -31,6 +31,26 @@ export class MessagesService {
         }
     }
 
+    async deleteMessage(userId: number, messageId: number) {
+        const txn = await this.knex.transaction();
+        try {
+            const check = await txn('messages')
+                .update({
+                    is_deleted: true
+                })
+                .where('id', messageId)
+                .where('sender', userId)
+                .returning('messages.is_deleted')
+            
+            await txn.commit()
+            return check
+        } catch (e) {
+            await txn.rollback();
+            throw e;
+        }
+
+    }
+
     async getMessages(chatroomId: number) {
         try {
             const messageList = await this.knex

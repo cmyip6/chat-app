@@ -106,7 +106,7 @@ export default function Messages() {
                 </Badge>}
                 {chatroom.isGroup ?
                   chatroom.participants.filter(participant => participant.isDeleted === false).map(participant => (participant.participantNickname || participant.participantName))
-                    .map(name => name === username ? 'You' : name).join(', ') :
+                    .map(name => name === username ? 'You' : name).sort().join(', ') :
                   chatroom.participants.map(participant =>
                     participant.participantId !== userId && (participant.participantNickname || participant.participantName)
                   )

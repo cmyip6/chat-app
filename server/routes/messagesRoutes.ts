@@ -6,9 +6,10 @@ export const messagesRoutes = () => {
 
    messagesRoutes.get('/:chatroomId', messagesController.getMessages);
    messagesRoutes.get('/chatroom/:userId', messagesController.getChatroomList)
+   messagesRoutes.put('/', messagesController.deleteMessage)
    messagesRoutes.put('/chatroom', messagesController.editChatroomName)
-   messagesRoutes.post('/chatroom', messagesController.createChatroom);
    messagesRoutes.post('/', messagesController.sendMessage);
+   messagesRoutes.post('/chatroom', messagesController.createChatroom);
    messagesRoutes.delete('/chatroom', messagesController.exitChatroom);
 
    
