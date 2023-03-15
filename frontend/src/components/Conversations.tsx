@@ -19,26 +19,27 @@ export default function Conversations() {
     const contactList = useAppSelector(state => state.contacts.contactsList)
     const lastMessageRef = useRef<HTMLInputElement>(null)
     const [typing, setTyping] =useState('')
+    const [roomId, setRoomId] =useState(0)
 
     useEffect(()=>{
         if (contactList === null) return
         socket.on('typingResponse', (data)=>{
             console.log(data.selectedChatroom, selectedChatroom)
-            if (data.selectedChatroom !== selectedChatroom) {
+            if (parseInt(data.selectedChatroom) !== selectedChatroom) {
                 return
             } else if (data.username === username) {
                 return
             } else {
                 const nickname = contactList.find(contact=>contact.contactUsername === data.username)?.nickname
                 const message = `${nickname || data.username} is typing...`
-    
+                setRoomId(data.selectedChatroom)
                 setTyping(message)
                 setTimeout(()=>{setTyping('')},1000)
                 return () => socket.close()
             }
         })
 
-    }, [typing, selectedChatroom])
+    })
 
     useEffect(() => {
         if (lastMessageRef.current) {
@@ -63,10 +64,15 @@ export default function Conversations() {
         dispatch(createContact())
     }
 
-    function handleTyping() {
-        socket.emit('typing', {username, selectedChatroom})
+    function handleTyping(e: React.KeyboardEvent<HTMLInputElement>) {
+        if(e.key==='Enter') {
+            e.preventDefault()
+            dispatch(sendMessage(userId, selectedChatroom, text))
+            setText('')
+        } else {
+            socket.emit('typing', {username, selectedChatroom})
+        }
     }
-
 
     return (
         <div className='d-flex flex-column flex-grow-1'>
@@ -109,9 +115,9 @@ export default function Conversations() {
                     })}
                 </div>
             </div>
+            {roomId === selectedChatroom &&<span className='m-2'>{typing}</span>}
             <Form onSubmit={handleSubmit}>
                 <Form.Group className='m-2'>
-                    <p>{typing}</p>
                     <InputGroup>
                         <Form.Control
                             as='textarea'

@@ -66,10 +66,11 @@ export const socketLogic = (socket: Socket) => {
     });
 
     socket.on('typing', (data) => {
-        io.to(`chatroom-${data.selectedChatroom}`).emit('typingResponse', data);        
+        io.to(`chatroom-${data.selectedChatroom}`).emit('typingResponse', data); 
     });
 
     socket.on('login', (user) => {
+
         socket.join(`user-${user.userId}`)
         userList.push(user)
         io.emit('loginResponse', user);
@@ -78,6 +79,7 @@ export const socketLogic = (socket: Socket) => {
     socket.on('logout', (user) => {
         userList = userList.filter(user => user.socketId !== socket.id)
         io.emit('logoutResponse', user);
+        socket.disconnect()
     });
 
     socket.on('disconnect', () => {
@@ -87,7 +89,6 @@ export const socketLogic = (socket: Socket) => {
             io.emit('logoutResponse', user);
             userList = userList.filter(user => user.socketId !== socket.id)
         }
-        socket.disconnect()
     });
 
     return socketLogic;

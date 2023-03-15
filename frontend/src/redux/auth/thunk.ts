@@ -21,6 +21,7 @@ export function login(username: string, password: string) {
         const result = await res.json()
         if (result.success) {
             
+            
             const payload = {
                 userId: result.userId,
                 username: result.username,
@@ -30,7 +31,7 @@ export function login(username: string, password: string) {
             dispatch(loginAction(payload));
             
             socket.emit('login', {
-                username,
+                username: result.username,
                 userId: result.userId,
                 socketId: socket.id,
               });
@@ -67,7 +68,6 @@ export function signUp(username: string, password: string) {
                 username: result.username,
                 token: result.token
             }
-            console.log(payload)
             localStorage.setItem(`${PREFIX}token`, result.token);
             dispatch(loginAction(payload));
         } else {

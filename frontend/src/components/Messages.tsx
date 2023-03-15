@@ -1,4 +1,4 @@
-import { Badge, Button, Input, Tooltip } from '@mantine/core'
+import { Badge, Input, Tooltip } from '@mantine/core'
 import { IconCheck, IconX } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 import { ListGroup } from 'react-bootstrap'
@@ -14,6 +14,12 @@ export default function Messages() {
   const selected = useAppSelector(state => state.messages.selectedChatroom)
   const editMode = useAppSelector(state => state.messages.editChatroomName)
   const [editName, setEditName] = useState('')
+  const [search, setSearch] = useState('')
+  const filteredChatroomList = chatroomList && chatroomList
+    .filter(chatroom => (chatroom.chatroomName && chatroom.chatroomName.toLowerCase().includes(search.toLowerCase()))
+    || (chatroom.participants.find(participant=> (participant.participantName !== username && participant.participantName.toLowerCase().includes(search.toLowerCase())) 
+    || participant.participantNickname?.toLowerCase().includes(search.toLowerCase()))))
+    
 
   useEffect(() => {
     return () => {
@@ -28,12 +34,6 @@ export default function Messages() {
       dispatch(getChatroomList(userId))
     })
   }, [chatroomList])
-
-  // useEffect(()=>{
-  //   if ( selected === null && chatroomList) {
-  //     dispatch(setSelectedChatroomAction(chatroomList[0].chatroomId))
-  //   }
-  // },[])
 
   function handleBlur(chatroomId: number, newName: string, originalName?: string) {
     if (originalName !== newName && newName.length) {
@@ -67,9 +67,16 @@ export default function Messages() {
 
   return (
     <div id='content-container' style={{ overflow: 'auto', height: '75vh' }}>
+      <Input.Wrapper label="Search" className='mb-2'>
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.currentTarget.value)}
+          rightSection={search.length ? <IconX size={16} onClick={()=>setSearch('')}/> : undefined}
+        />
+      </Input.Wrapper>
       <ListGroup variant='flush'>
-        {chatroomList && chatroomList.map(chatroom => (
-          <Tooltip key={chatroom.chatroomId} disabled={!chatroom.isGroup} label={chatroom.chatroomName || "Double Click to Edit Name"}>
+        {filteredChatroomList && filteredChatroomList.map(chatroom => (
+          <Tooltip key={chatroom.chatroomId} disabled={!chatroom.isGroup || !!(chatroom.chatroomName && chatroom.chatroomName.length <= 24)} label={chatroom.chatroomName || "Double Click to Edit Name"}>
             <div style={{ position: 'relative', overflowY: 'hidden', overflowX: 'visible' }}>
               <ListGroup.Item
                 className='text-center'
@@ -98,31 +105,30 @@ export default function Messages() {
                     chatroom.chatroomName}
                 </Badge>}
                 {chatroom.isGroup ?
-                  chatroom.participants.filter(participant=> participant.isDeleted === false).map(participant => (participant.participantNickname || participant.participantName))
+                  chatroom.participants.filter(participant => participant.isDeleted === false).map(participant => (participant.participantNickname || participant.participantName))
                     .map(name => name === username ? 'You' : name).join(', ') :
                   chatroom.participants.map(participant =>
                     participant.participantId !== userId && (participant.participantNickname || participant.participantName)
                   )
                 }
-
-                <Button
-                  variant='subtle'
-                  style={{ position: 'absolute', top: '0px', right: '5px', padding: '0px' }}
-                  onClick={() => handleDelete(chatroom.chatroomId, userId!)}
-                >
-                  <IconX
-                    color={selected === chatroom.chatroomId ? 'white' : undefined}
-                    size={15}
-                  />
-                </Button>
-
-                {chatroom.isGroup && 
-                  <Badge 
-                    size='xs' 
+                <Tooltip label={chatroom.isGroup? "Quit group" : "Archive chat"}>
+                  <span
+                    style={{ position: 'absolute', top: '0px', right: '5px', padding: '0px' }}
+                    onClick={() => handleDelete(chatroom.chatroomId, userId!)}
+                  >
+                    <IconX
+                      color={selected === chatroom.chatroomId ? 'white' : undefined}
+                      size={15}
+                    />
+                  </span>
+                </Tooltip>
+                {chatroom.isGroup &&
+                  <Badge
+                    size='xs'
                     variant='light'
-                    style={{position: 'absolute', top:'2px', left:'2px', padding:'1px'}}
-                    >
-                      Group
+                    style={{ position: 'absolute', top: '2px', left: '2px', padding: '1px' }}
+                  >
+                    Group
                   </Badge>
                 }
 

@@ -88,6 +88,7 @@ export function sendMessage(userId: number, selectedChatroom: number, text: stri
         });
 
         if (result.success) {
+            socket.emit('sendMessage', selectedChatroom); 
 
             console.log(result)
             const payload = {
@@ -101,7 +102,6 @@ export function sendMessage(userId: number, selectedChatroom: number, text: stri
             }
 
             dispatch(sendMessageAction({message: payload, chatroomId: selectedChatroom}));
-            socket.emit('sendMessage', selectedChatroom); 
         } 
     };
 }
@@ -176,6 +176,7 @@ export function editChatroomName(chatroomId: number, chatroomName: string) {
                 chatroomName
             }
             dispatch(editChatroomNameAction(payload))
+            socket.emit('sendMessage', chatroomId)
             console.log(result.msg)
         } else {
             showNotification({

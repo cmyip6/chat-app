@@ -43,7 +43,6 @@ function App() {
   },[contactList])
 
   useEffect(()=>{
-    // if (chatroomList === null || !userId) return
     socket.on('sendMessageResponse', (chatroomId) => {
       dispatch(getMessages(chatroomId))
   });
