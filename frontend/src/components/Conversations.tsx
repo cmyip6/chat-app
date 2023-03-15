@@ -7,6 +7,7 @@ import { createContact } from '../redux/contacts/thunk'
 import { deleteMessageAction } from '../redux/messages/slice'
 import { getChatroomList, sendMessage, deleteMessage } from '../redux/messages/thunk'
 import { socket, useAppDispatch, useAppSelector } from '../store'
+import { ConfirmationHub } from './ConfirmationHub'
 
 export default function Conversations() {
     const [text, setText] = useState("")
@@ -21,6 +22,8 @@ export default function Conversations() {
     const lastMessageRef = useRef<HTMLInputElement>(null)
     const [typing, setTyping] = useState('')
     const [roomId, setRoomId] = useState(0)
+    const [opened, setOpened] = useState(false)
+    const [deleteTarget, setDeleteTarget] = useState(0)
 
     useEffect(() => {
         if (contactList === null) return
@@ -82,8 +85,19 @@ export default function Conversations() {
 
     function handleDeleteMessage(e: React.MouseEvent<HTMLButtonElement>) {
         e.preventDefault()
-        dispatch(deleteMessage(parseInt(e.currentTarget.value), userId))
+        setOpened(true)
+        setDeleteTarget(parseInt(e.currentTarget.value))
     }
+
+    function onClose(){
+        setOpened(false)
+        setDeleteTarget(0)
+      }
+    
+      function onDelete(){
+        dispatch(deleteMessage(deleteTarget, userId))
+        onClose()
+      }
 
     return (
         <div className='d-flex flex-column flex-grow-1'>
@@ -105,11 +119,11 @@ export default function Conversations() {
                                 {/* Message */}
                                 <HoverCard shadow='xs' openDelay={500}>
                                     <HoverCard.Target>
-                                        <Container 
-                                            style={{ maxWidth: '400px', height: 'fit-content' }} 
+                                        <Container
+                                            style={{ maxWidth: '400px', height: 'fit-content' }}
                                             className={`rounded px-2 py-1 ${message.isSystemMessage || message.isDeleted
-                                                ? 'bg-secondary text-white' : message.senderId === userId 
-                                                ? 'bg-primary text-white' : 'border'}`}>
+                                                ? 'bg-secondary text-white' : message.senderId === userId
+                                                    ? 'bg-primary text-white' : 'border'}`}>
                                             {
                                                 message.isSystemMessage ?
                                                     <><Badge size='lg' color="red" radius="xs" variant="dot" style={{ color: "white" }}>SYSTEM MESSAGE</Badge>  {message.content}</>
@@ -176,6 +190,7 @@ export default function Conversations() {
                     </InputGroup>
                 </Form.Group>
             </Form>
+            <ConfirmationHub isShow={opened} onClose={onClose} onDelete={onDelete} />
         </div>
     )
 }

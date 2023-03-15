@@ -2,9 +2,10 @@ import { Badge, Input, Tooltip } from '@mantine/core'
 import { IconCheck, IconX } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 import { ListGroup } from 'react-bootstrap'
-import { editChatroomModeAction, setSelectedChatroomAction } from '../redux/messages/slice'
-import { editChatroomName, exitChatroom, getChatroomList } from '../redux/messages/thunk'
+import { editChatroomModeAction, setSelectedChatroomAction, toggleParticipantStatusAction } from '../redux/messages/slice'
+import { editChatroomName, exitChatroom, getChatroomList, getMessages } from '../redux/messages/thunk'
 import { socket, useAppDispatch, useAppSelector } from '../store'
+import { ConfirmationHub } from './ConfirmationHub'
 
 export default function Messages() {
   const dispatch = useAppDispatch()
@@ -15,11 +16,13 @@ export default function Messages() {
   const editMode = useAppSelector(state => state.messages.editChatroomName)
   const [editName, setEditName] = useState('')
   const [search, setSearch] = useState('')
+  const [opened, setOpened] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(0)
   const filteredChatroomList = chatroomList && chatroomList
     .filter(chatroom => (chatroom.chatroomName && chatroom.chatroomName.toLowerCase().includes(search.toLowerCase()))
-    || (chatroom.participants.find(participant=> (participant.participantName !== username && participant.participantName.toLowerCase().includes(search.toLowerCase())) 
-    || participant.participantNickname?.toLowerCase().includes(search.toLowerCase()))))
-    
+      || (chatroom.participants.find(participant => (participant.participantName !== username && participant.participantName.toLowerCase().includes(search.toLowerCase()))
+        || participant.participantNickname?.toLowerCase().includes(search.toLowerCase()))))
+
 
   useEffect(() => {
     return () => {
@@ -34,6 +37,20 @@ export default function Messages() {
       dispatch(getChatroomList(userId))
     })
   }, [chatroomList])
+
+  useEffect(()=>{
+    socket.on('sendMessageResponse', (chatroomId) => {
+      dispatch(getMessages(chatroomId))
+  });
+  }, [chatroomList])
+
+  useEffect(()=>{
+    socket.on('toggleParticipantStatusResponse', (data) => {
+      dispatch(toggleParticipantStatusAction({chatroomId: data.chatroomId, participantId: data.participantId, isDeleted: data.isDeleted}))
+      dispatch(getMessages(data.chatroomId))
+    });
+  }, [chatroomList])
+
 
   function handleBlur(chatroomId: number, newName: string, originalName?: string) {
     if (originalName !== newName && newName.length) {
@@ -54,9 +71,9 @@ export default function Messages() {
     setEditName("")
   }
 
-  function handleDelete(chatroomId: number, userId: number) {
-    dispatch(exitChatroom(chatroomId, userId))
-    dispatch(setSelectedChatroomAction(0))
+  function handleDelete(chatroomId: number) {
+    setDeleteTarget(chatroomId)
+    setOpened(true)
   }
 
   const handleEditNameKeyDown = (key: string, chatroomId: number) => {
@@ -65,13 +82,25 @@ export default function Messages() {
     }
   };
 
+  function onClose() {
+    setOpened(false)
+    setDeleteTarget(0)
+    dispatch(setSelectedChatroomAction(0))
+  }
+
+  function onDelete() {
+    if (!userId) return
+    dispatch(exitChatroom(deleteTarget, userId))
+    onClose()
+  }
+
   return (
     <div id='content-container' style={{ overflow: 'auto', height: '75vh' }}>
       <Input.Wrapper label="Search" className='mb-2'>
         <Input
           value={search}
           onChange={(e) => setSearch(e.currentTarget.value)}
-          rightSection={search.length ? <IconX size={16} onClick={()=>setSearch('')}/> : undefined}
+          rightSection={search.length ? <IconX size={16} onClick={() => setSearch('')} /> : undefined}
         />
       </Input.Wrapper>
       <ListGroup variant='flush'>
@@ -111,10 +140,10 @@ export default function Messages() {
                     participant.participantId !== userId && (participant.participantNickname || participant.participantName)
                   )
                 }
-                <Tooltip label={chatroom.isGroup? "Quit group" : "Archive chat"}>
+                <Tooltip label={chatroom.isGroup ? "Quit group" : "Archive chat"}>
                   <span
                     style={{ position: 'absolute', top: '0px', right: '5px', padding: '0px' }}
-                    onClick={() => handleDelete(chatroom.chatroomId, userId!)}
+                    onClick={() => handleDelete(chatroom.chatroomId)}
                   >
                     <IconX
                       color={selected === chatroom.chatroomId ? 'white' : undefined}
@@ -137,6 +166,11 @@ export default function Messages() {
           </Tooltip>
         ))}
       </ListGroup>
+      <ConfirmationHub isShow={opened} onClose={onClose} onDelete={onDelete} />
     </div>
   )
 }
+function participantLeaveChatroom(arg0: { chatroomId: any; participantId: any }): any {
+  throw new Error('Function not implemented.')
+}
+

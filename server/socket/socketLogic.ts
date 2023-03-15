@@ -69,6 +69,10 @@ export const socketLogic = (socket: Socket) => {
         }
     });
 
+    socket.on('toggleParticipantStatus', (data) => {
+        io.to(`chatroom-${data.chatroomId}`).emit('toggleParticipantStatusResponse', data)
+    });
+
     socket.on('typing', (data) => {
         io.to(`chatroom-${data.selectedChatroom}`).emit('typingResponse', data); 
     });

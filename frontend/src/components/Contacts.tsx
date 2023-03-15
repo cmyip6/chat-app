@@ -5,6 +5,7 @@ import { setEditModeAction, toggleOnlineAction } from '../redux/contacts/slice'
 import { deleteContact, editContactName } from '../redux/contacts/thunk'
 import { createChatroom } from '../redux/messages/thunk'
 import { socket, useAppDispatch, useAppSelector } from '../store'
+import { ConfirmationHub } from './ConfirmationHub'
 
 export default function Contacts() {
   const dispatch = useAppDispatch()
@@ -12,11 +13,13 @@ export default function Contacts() {
   const editTarget = useAppSelector(state => state.contacts.editTarget)
   const [editName, setEditName] = useState('')
   const [search, setSearch] = useState('')
+  const [opened, setOpened] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(0)
+
   const filteredContactList = contactList && contactList.filter(contact => contact.contactUsername.includes(search) 
     || contact.nickname?.toLowerCase().includes(search))
        
   useEffect(() => {
-
     if (contactList === null) return
     socket.on('loginResponse', (user) => {
       console.log('loginResponse')
@@ -40,7 +43,8 @@ export default function Contacts() {
 
   function handleDelete(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
     e.preventDefault()
-    dispatch(deleteContact(parseInt(e.currentTarget.value)))
+    setOpened(true)
+    setDeleteTarget(parseInt(e.currentTarget.value))
   }
 
   function handleBlur(contactId: number) {
@@ -59,6 +63,16 @@ export default function Contacts() {
     if (key === 'Enter') {
       handleBlur(contactId)
     }
+  }
+
+  function onClose(){
+    setOpened(false)
+    setDeleteTarget(0)
+  }
+
+  function onDelete(){
+    dispatch(deleteContact(deleteTarget))
+    onClose()
   }
 
   return (
@@ -150,7 +164,7 @@ export default function Contacts() {
           </Card>
         </div>
       })}
-
+    <ConfirmationHub isShow={opened} onClose={onClose} onDelete={onDelete}/>
     </div>
   )
 

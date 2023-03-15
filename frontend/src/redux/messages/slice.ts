@@ -74,6 +74,19 @@ const exitChatroom: CaseReducer<MessagesState, PayloadAction<number>> = (state, 
     state.chatroomList = state.chatroomList!.filter(chatroom=> chatroom.chatroomId !== action.payload)
 };
 
+const toggleParticipantStatus: CaseReducer<MessagesState, PayloadAction<{chatroomId: number, participantId: number, isDeleted: boolean}>> = (state, action) => {
+    for (let chatroom of state.chatroomList!){
+        if (chatroom.chatroomId === action.payload.chatroomId) {
+            for (let participant of chatroom.participants){
+                if (participant.participantId === action.payload.participantId){
+                    participant.isDeleted = false
+                    return
+                }
+            }
+        }
+    }
+};
+
 const sendMessage: CaseReducer<MessagesState, PayloadAction<{message: Message, chatroomId: number}>> = (state, action) => {
     for (let chatroom of state.chatroomList!){
         if(chatroom.chatroomId === action.payload.chatroomId) {
@@ -118,6 +131,7 @@ const messagesSlice = createSlice({
         deleteMessage,
         getMessages,
         exitChatroom,
+        toggleParticipantStatus,
         clearChatroomList
     }
 });
@@ -132,6 +146,7 @@ export const {
     deleteMessage: deleteMessageAction,
     getMessages: getMessagesAction,
     exitChatroom: exitChatroomAction,
+    toggleParticipantStatus: toggleParticipantStatusAction,
     clearChatroomList: clearChatroomListAction
 } = messagesSlice.actions;
 

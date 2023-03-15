@@ -41,6 +41,8 @@ export function createChatroom(nameList: string[], chatroomName?: string) {
 
         if (result.msg==='Chatroom Existed') {
             dispatch(setSelectedChatroomAction(result.chatroomId!))
+            socket.emit('toggleParticipantStatus', {chatroomId: result.chatroomId, participantId: owner, isDeleted: false}); 
+            
         } else if (result.success) {
             const payload = {
                 chatroomId: result.chatroomId!,
@@ -237,6 +239,7 @@ export function exitChatroom(chatroomId: number, participantId:number) {
         >(`/messages/chatroom`, {chatroomId, participantId});
 
         if (result.success) {
+            socket.emit('toggleParticipantStatus', {chatroomId, participantId, isDeleted: true}); 
             dispatch(exitChatroomAction(chatroomId))
             const chatroomList = getState().messages.chatroomList
             chatroomList && dispatch(setSelectedChatroomAction(chatroomList[0].chatroomId))

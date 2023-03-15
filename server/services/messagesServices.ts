@@ -41,7 +41,7 @@ export class MessagesService {
                 .where('id', messageId)
                 .where('sender', userId)
                 .returning('messages.is_deleted')
-            
+
             await txn.commit()
             return check
         } catch (e) {
@@ -88,7 +88,7 @@ export class MessagesService {
                     system_message: true,
                     content: `Chatroom name has been changed to '${chatroomName}'`
                 })
-            
+
             await txn.commit()
             return true
         } catch (e) {
@@ -96,6 +96,16 @@ export class MessagesService {
             throw e;
         }
 
+    }
+
+    async createSystemMessage(chatroomId: number, senderId: number, message: string) {
+        await this.knex('messages')
+            .insert({
+                sender: senderId,
+                chatroom_id: chatroomId,
+                system_message: true,
+                content: message
+            })
     }
 
     async exitChatroom(chatroomId: number, participantId: number) {
@@ -149,7 +159,7 @@ export class MessagesService {
                     for (let j = 0; j < personTwoChatroomList.length; j++) {
                         if (personOneChatroomList[i].id === personTwoChatroomList[j].id) {
                             await txn('participation').update({ is_deleted: false }).where('id', personOneChatroomList[i].participationId)
-                            await txn('participation').update({ is_deleted: false }).where('id', personOneChatroomList[i].participationId)
+                            await txn('participation').update({ is_deleted: false }).where('id', personTwoChatroomList[j].participationId)
                             await txn.commit();
                             return personTwoChatroomList[j].id
                         }
