@@ -17,3 +17,14 @@
   #content-container::-webkit-scrollbar-thumb:hover {
     background: lightblue; 
   }
+
+  #drag-button{
+    position: absolute;
+    top: 40%;
+    right: -13px;
+    padding: 0px;
+    z-index: 99;
+    margin: 0px;
+    transform: rotate(90deg);
+    visibility: visible!important
+  }

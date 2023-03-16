@@ -1,4 +1,4 @@
-import { Badge, Button, HoverCard, Tooltip } from '@mantine/core'
+import { Badge, Button, HoverCard, Loader, Tooltip } from '@mantine/core'
 import { IconSend } from '@tabler/icons-react'
 import React, { useEffect, useRef, useState } from 'react'
 import { Form, InputGroup, Button as BootstrapButton, Container } from 'react-bootstrap'
@@ -8,6 +8,7 @@ import { deleteMessageAction } from '../redux/messages/slice'
 import { getChatroomList, sendMessage, deleteMessage } from '../redux/messages/thunk'
 import { socket, useAppDispatch, useAppSelector } from '../store'
 import { ConfirmationHub } from './ConfirmationHub'
+import OptionPanel from './OptionPanel'
 
 export default function Conversations() {
     const [text, setText] = useState("")
@@ -35,7 +36,7 @@ export default function Conversations() {
                 return
             } else {
                 const nickname = contactList.find(contact => contact.contactUsername === data.username)?.nickname
-                const message = `${nickname || data.username} is typing...`
+                const message = nickname || data.username
                 setRoomId(data.selectedChatroom)
                 setTyping(message)
                 setTimeout(() => { setTyping('') }, 1000)
@@ -89,15 +90,15 @@ export default function Conversations() {
         setDeleteTarget(parseInt(e.currentTarget.value))
     }
 
-    function onClose(){
+    function onClose() {
         setOpened(false)
         setDeleteTarget(0)
-      }
-    
-      function onDelete(){
+    }
+
+    function onDelete() {
         dispatch(deleteMessage(deleteTarget, userId))
         onClose()
-      }
+    }
 
     return (
         <div className='d-flex flex-column flex-grow-1'>
@@ -170,7 +171,7 @@ export default function Conversations() {
                     })}
                 </div>
             </div>
-            {roomId === selectedChatroom && <span className='m-2 text-muted small'>{typing}</span>}
+            {roomId === selectedChatroom && typing && <span className='m-2 text-muted small' style={{width:'fit-content'}}>{typing}  <Loader variant="dots" /></span>}
             <Form onSubmit={handleSubmit}>
                 <Form.Group className='m-2'>
                     <InputGroup>
@@ -191,6 +192,7 @@ export default function Conversations() {
                 </Form.Group>
             </Form>
             <ConfirmationHub isShow={opened} onClose={onClose} onDelete={onDelete} />
+            <OptionPanel />
         </div>
     )
 }
