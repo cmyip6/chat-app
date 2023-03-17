@@ -1,49 +1,44 @@
-
-import { useEffect } from "react";
+import { ColorScheme, ColorSchemeProvider, MantineProvider, MantineThemeOverride } from "@mantine/core";
+import { useEffect, useState } from "react";
 import './App.css'
 import Home from "./components/Home";
 import Login from "./components/Login";
 import { retrieveLogin } from "./redux/auth/thunk";
-import { getContactsListAction } from "./redux/contacts/slice";
+import { PREFIX, useAppDispatch, useAppSelector } from "./store";
 
-import { getContactList } from "./redux/contacts/thunk";
-import { getChatroomList } from "./redux/messages/thunk";
-import { PREFIX, socket, useAppDispatch, useAppSelector } from "./store";
 
 function App() {
-  const dispatch= useAppDispatch()
-  const login = useAppSelector(state=>state.auth.isLoggedIn)
-  const userId = useAppSelector((state) => state.auth.userId);
-  const contactList = useAppSelector((state) => state.contacts.contactsList);
+  const dispatch = useAppDispatch()
+  const login = useAppSelector(state => state.auth.isLoggedIn)
+  
   const token = localStorage.getItem(`${PREFIX}token`)
+  const [colorScheme, setColorScheme] = useState<ColorScheme>('light');
+  const toggleColorScheme = (value?: ColorScheme) =>
+    setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
 
   useEffect(() => {
-    document.title = `Chat-APP`;
-  });
-
-  useEffect(()=>{
-    if (token){
+    if (token && !login) {
       dispatch(retrieveLogin(token))
     }
-  },[])
+  }, [])
 
-  useEffect(()=>{
-    if (login && userId) {
-      dispatch(getContactList(userId))
-      dispatch(getChatroomList(userId))   
-    }
-  },[login])
-
-  useEffect(()=>{
-    if (contactList === null) return
-    socket.on('getOnlineUserListResponse', (contactList) => {
-      dispatch(getContactsListAction(contactList))
-    });
-  },[contactList])
-
+  const myTheme: MantineThemeOverride = {
+    colorScheme: colorScheme,
+    primaryColor: 'orange',
+    defaultRadius: 0,
+  };
 
   return (
-    !login ? <Login /> : <Home/>
+    <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}
+    >
+      <MantineProvider
+        withNormalizeCSS
+        withGlobalStyles
+        theme={myTheme}
+      >
+        {!login ? <Login /> : <Home />}
+      </MantineProvider>
+    </ColorSchemeProvider>
   )
 }
 

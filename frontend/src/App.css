@@ -18,6 +18,16 @@
     background: lightblue; 
   }
 
+  #drag-button-closed{
+    position: absolute;
+    top: 40%;
+    right: -13px;
+    padding: 0px;
+    z-index: 99;
+    margin: 0px;
+    visibility: visible!important
+  }
+
   #drag-button{
     position: absolute;
     top: 40%;
@@ -25,6 +35,10 @@
     padding: 0px;
     z-index: 99;
     margin: 0px;
+    visibility: visible!important;
     transform: rotate(90deg);
+  }
+
+  #option-panel-resize-icon{
     visibility: visible!important
   }

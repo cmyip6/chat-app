@@ -1,5 +1,5 @@
 import { Button, Card, Divider, Group, Input, Tooltip } from '@mantine/core'
-import { IconPointFilled, IconX } from '@tabler/icons-react'
+import { IconPointFilled, IconSearch, IconX } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 import { setEditModeAction, toggleOnlineAction } from '../redux/contacts/slice'
 import { deleteContact, editContactName } from '../redux/contacts/thunk'
@@ -77,9 +77,11 @@ export default function Contacts() {
 
   return (
     <div id='content-container' style={{ overflow: 'auto', height: '75vh' }}>
-      <Input.Wrapper label="Search">
+      <Input.Wrapper label="Search" style={{margin: '2px'}}>
         <Input
           value={search}
+          icon={<IconSearch size={20}/>}
+          placeholder= 'Username'
           onChange={(e) => setSearch(e.currentTarget.value)}
           rightSection={search.length ? <IconX size={16} onClick={()=>setSearch('')}/> : undefined}
         />

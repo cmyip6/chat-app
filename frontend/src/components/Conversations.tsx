@@ -39,17 +39,18 @@ export default function Conversations() {
                 const message = nickname || data.username
                 setRoomId(data.selectedChatroom)
                 setTyping(message)
-                setTimeout(() => { setTyping('') }, 1000)
-                return () => socket.close()
+                const timer = setTimeout(() => { setTyping('') }, 1000)
+                
+                return ()=> clearTimeout(timer)
             }
         })
-    })
+    }, [selectedChatroom])
 
     useEffect(() => {
         socket.on('deleteMessageResponse', (messageId) => {
             dispatch(deleteMessageAction(messageId))
         })
-    })
+    }, [messageList])
 
     useEffect(() => {
         if (lastMessageRef.current) {
@@ -61,7 +62,7 @@ export default function Conversations() {
         if (selectedChatroom) {
             dispatch(getChatroomList(userId))
         }
-    }, [dispatch, selectedChatroom])
+    }, [selectedChatroom])
 
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
@@ -101,8 +102,8 @@ export default function Conversations() {
     }
 
     return (
-        <div className='d-flex flex-column flex-grow-1'>
-            <div className='flex-grow-1 overflow-auto'>
+        <div className='d-flex flex-column flex-grow-1 overflow-hidden' >
+            <div id='message-container' className='overflow-auto' style={{height: '100vh', position:'relative'}}>
                 <div id='content-container' className='d-flex flex-column align-items-start justify-content-end px-3'>
                     {messageList && messageList.messageList.map((message, index) => {
                         const lastMessage = messageList.messageList.length - 1 === index
@@ -169,11 +170,11 @@ export default function Conversations() {
                             </div>
                         )
                     })}
+                    <p className='m-2 text-muted small' style={{width:'fit-content'}}>{roomId === selectedChatroom && typing && <>{typing}  <Loader variant="dots" /></>}</p>
                 </div>
             </div>
-            {roomId === selectedChatroom && typing && <span className='m-2 text-muted small' style={{width:'fit-content'}}>{typing}  <Loader variant="dots" /></span>}
             <Form onSubmit={handleSubmit}>
-                <Form.Group className='m-2'>
+                <Form.Group className='m-2' style={{position: 'relative'}}>
                     <InputGroup>
                         <Form.Control
                             as='textarea'
@@ -186,7 +187,7 @@ export default function Conversations() {
                             onChange={e => setText(e.currentTarget.value)}
                             style={{ resize: 'none' }}
                         />
-                        <BootstrapButton type='submit'><IconSend size={14} /></BootstrapButton>
+                        <Button radius='sm' type='submit'><IconSend size={14} /></Button>
 
                     </InputGroup>
                 </Form.Group>

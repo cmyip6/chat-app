@@ -1,5 +1,5 @@
 import { Button, Modal, Tabs } from '@mantine/core'
-import { IconMenuOrder, IconMessageCircle, IconPhoto } from '@tabler/icons-react'
+import { IconCaretRight, IconMenuOrder, IconMessageCircle, IconPhoto } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 import { logout } from '../redux/auth/thunk'
 import { PREFIX, useAppDispatch, useAppSelector } from '../store'
@@ -33,8 +33,8 @@ export default function SidePanel() {
 
         function onMouseMove(e: MouseEvent): void {
             const width = startSize - startPosition + e.pageX
-            if (width < 150) {
-                setSize(20)
+            if (width < 200) {
+                setSize(20) 
             } else {
                 setSize(width);
             }
@@ -57,11 +57,11 @@ export default function SidePanel() {
             <Button
                 size='xs'
                 variant='subtle'
-                id='drag-button'
+                id={`drag-button${size===20 ? "-closed": ''}`}
                 onMouseDown={mouseDownHandler}
-                onClick={()=> size === 20? setSize(250) : null}
+                onClick={()=> size === 20? setSize(250) : size === 250 ? setSize(20): null}
             >
-                <IconMenuOrder size={25} />
+                {size === 20 ? <IconCaretRight size={30} /> : <IconMenuOrder size={25} />}
             </Button>
 
             <Tabs value={activeTab} onTabChange={setActiveTab} className='border-right overflow-auto flex-grow-1'>

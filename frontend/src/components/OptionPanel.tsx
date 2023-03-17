@@ -1,11 +1,14 @@
-import { Divider } from '@mantine/core';
-import { IconMenuOrder } from '@tabler/icons-react';
+import { Divider, useMantineTheme } from '@mantine/core';
+import { IconCaretUp, IconMenuOrder } from '@tabler/icons-react';
 import React, { useEffect, useState } from 'react'
 import { PREFIX } from '../store';
+import MessageColorControl from './MessageColorControl';
+import ThemeControl from './ThemeControl';
 
 export default function OptionPanel() {
     const savedSize = window.localStorage.getItem(`${PREFIX}optionHeight`)
     const [size, setSize] = useState((savedSize && parseInt(savedSize)) || 250);
+    const theme = useMantineTheme()
 
     // save value after resizing
     useEffect(() => {
@@ -21,10 +24,10 @@ export default function OptionPanel() {
 
         function onMouseMove(e: MouseEvent): void {
             const height = startSize + startPosition - e.pageY
-            if(height< 100){
-                setSize(30)
+            if (height < 100) {
+                setSize(20)
             } else {
-                setSize(()=> height);
+                setSize(height);
             }
         }
 
@@ -37,20 +40,44 @@ export default function OptionPanel() {
     };
 
     return (
-        <div style={{height: `${size}px`, minHeight: '30px'}}>
-            <Divider 
-                style={{margin:'0px'}} 
-                labelPosition='center' 
-                my='xs' 
-                color={'lightgrey'} 
-                label={<IconMenuOrder 
-                    size={25}
-                    color="#238BE6"
-                    style={{cursor: 'pointer'}}
-                    onClick={()=> size === 30? setSize(250) : null}
-                    onMouseDown={mouseDownHandler}
-                    />} 
-                />
+        <div 
+            style={{ 
+                height: `${size}px`, 
+                minHeight: '20px', 
+                overflow: 'hidden', 
+                visibility: `${size <= 100 ? 'hidden' : 'visible'}` 
+                }}>
+            <Divider
+                style={{ margin: '0px' }}
+                labelPosition='center'
+                my='xs'
+                label=
+                {
+                    <span
+                        id='option-panel-resize-icon'
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => size >= 100 ? setSize(20) : size === 20 ? setSize(250) : null}
+                        onMouseDown={mouseDownHandler}
+                    >
+                    {
+                        size === 20 ?
+                            <IconCaretUp
+                                size={35}
+                                style={{ marginTop: '-10px' }}
+                                color={theme.primaryColor}
+                            /> :
+                            <IconMenuOrder
+                                size={25}
+                                color={theme.primaryColor}
+                            />
+                    }
+                    </span>
+                }
+            />
+            <div className='row'>
+                <ThemeControl />
+                <MessageColorControl />
+            </div>
         </div>
     )
 }

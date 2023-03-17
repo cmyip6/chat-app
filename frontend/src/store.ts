@@ -5,17 +5,20 @@ import { io } from "socket.io-client";
 import authReducer, { AuthState } from "./redux/auth/slice";
 import contactReducer, { ContactState } from "./redux/contacts/slice";
 import messagesReducer, { MessagesState } from "./redux/messages/slice";
+import optionReducer, { OptionState } from "./redux/option/slice";
 
 export interface IRootState {
     auth: AuthState,
     contacts: ContactState,
     messages: MessagesState,
+    option: OptionState
 }
 
 const rootReducer = combineReducers({
     auth: authReducer,
     contacts: contactReducer,
     messages: messagesReducer,
+    option: optionReducer,
 });
 
 export const store = configureStore({
