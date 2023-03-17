@@ -1,7 +1,7 @@
-import { Badge, Button, HoverCard, Loader, Tooltip } from '@mantine/core'
+import { Badge, Button, HoverCard, Loader, Tooltip, useMantineTheme } from '@mantine/core'
 import { IconSend } from '@tabler/icons-react'
 import React, { useEffect, useRef, useState } from 'react'
-import { Form, InputGroup, Button as BootstrapButton, Container } from 'react-bootstrap'
+import { Form, InputGroup, Container } from 'react-bootstrap'
 import { setTargetUserAction } from '../redux/contacts/slice'
 import { createContact } from '../redux/contacts/thunk'
 import { deleteMessageAction } from '../redux/messages/slice'
@@ -13,9 +13,11 @@ import OptionPanel from './OptionPanel'
 export default function Conversations() {
     const [text, setText] = useState("")
     const dispatch = useAppDispatch()
+    const theme = useMantineTheme()
     const userId = useAppSelector(state => state.auth.userId)!
     const username = useAppSelector(state => state.auth.username)!
     const selectedChatroom = useAppSelector(state => state.messages.selectedChatroom)!
+    const messageColor = useAppSelector(state=>state.messages.chatroomList?.find(chatroom=>chatroom.chatroomId===selectedChatroom)?.myMessageColor)
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const chatroomList = useAppSelector(state => state.messages.chatroomList)
     const [messageList] = chatroomList?.filter(chatroom => chatroom.chatroomId === selectedChatroom) || []
@@ -122,10 +124,14 @@ export default function Conversations() {
                                 <HoverCard shadow='xs' openDelay={500}>
                                     <HoverCard.Target>
                                         <Container
-                                            style={{ maxWidth: '400px', height: 'fit-content' }}
+                                            style={{ 
+                                                maxWidth: '400px', 
+                                                height: 'fit-content', 
+                                                backgroundColor: message.senderId !== userId ? 'white' : messageColor ? messageColor : theme.primaryColor 
+                                            }}
                                             className={`rounded px-2 py-1 ${message.isSystemMessage || message.isDeleted
                                                 ? 'bg-secondary text-white' : message.senderId === userId
-                                                    ? 'bg-primary text-white' : 'border'}`}>
+                                                    ? 'text-white' : 'border'}`}>
                                             {
                                                 message.isSystemMessage ?
                                                     <><Badge size='lg' color="red" radius="xs" variant="dot" style={{ color: "white" }}>SYSTEM MESSAGE</Badge>  {message.content}</>

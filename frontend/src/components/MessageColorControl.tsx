@@ -1,32 +1,42 @@
-import { ColorSwatch, Container, Group, Input, Slider, Title, useMantineTheme } from '@mantine/core'
+import { ColorPicker, Container, Input, Title } from '@mantine/core'
+import { showNotification } from '@mantine/notifications';
+import { IconAlertCircle } from '@tabler/icons-react';
 import React, { useState } from 'react'
+import { setMessageColorAction } from '../redux/messages/slice';
+import { PREFIX, useAppDispatch, useAppSelector } from '../store';
 
 export default function MessageColorControl() {
-    const theme = useMantineTheme()
-    const [value, setValue] = useState(1);
+    const dispatch = useAppDispatch()
+    const [value, setValue] = useState("#228be6");
+    const selectedChatroom = useAppSelector(state => state.messages.selectedChatroom)
+    const swatches = ['#25262b', '#868e96', '#fa5252', '#e64980', '#be4bdb', '#7950f2', '#4c6ef5', '#228be6', '#15aabf', '#12b886', '#40c057', '#82c91e', '#fab005', '#fd7e14']
 
-    const swatches = Object.keys(theme.colors).map((color) => (
-        <ColorSwatch key={color} color={theme.fn.rgba(theme.colors[color][6], value)} />
-    ));
+    const handleChangeEnd = () => {
+        if (!selectedChatroom) {
+            showNotification({
+                message: 'Select a chatroom first',
+                autoClose: 3000,
+                icon: <IconAlertCircle />,
+                color: 'red'
+            })
+        } else {
+            window.localStorage.setItem(`${PREFIX}chatroom-${selectedChatroom}-messageBackground`, value)
+            dispatch(setMessageColorAction({chatroomId: selectedChatroom, color: value}))
+        }
+    }
 
     return (
-        <Container className='col-6 d-flex flex-column gap-2 text-center'>
+        <Container className='col-6 d-flex flex-column justify-content-center align-items-center gap-2 text-center'>
             <Title className='mb-2' order={5}>Message Control</Title>
-            <Input.Wrapper label="Text Color and Opacity">
-                <Slider
-                    style={{ width: '70%', margin: "0 auto" }}
+            <Input.Wrapper label="Text Background and Opacity">
+                <ColorPicker
+                    format="rgba"
                     value={value}
-                    label={(value)=> Math.round(value*10)}
-                    min={0}
-                    max={1}
-                    step={0.1}
-                    onChange={setValue} />
+                    swatches={swatches}
+                    onChange={setValue}
+                    onChangeEnd={handleChangeEnd}
+                />
             </Input.Wrapper>
-
-            <Group  position="center" spacing="xs">
-                {swatches}
-            </Group>
-
         </Container>
     )
 }

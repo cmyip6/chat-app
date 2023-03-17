@@ -1,9 +1,9 @@
 import { Badge, Card, Input, Tooltip, useMantineTheme } from '@mantine/core'
 import { IconCheck, IconSearch, IconX } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
-import { editChatroomModeAction, setSelectedChatroomAction, toggleParticipantStatusAction } from '../redux/messages/slice'
+import { editChatroomModeAction, setMessageColorAction, setSelectedChatroomAction, toggleParticipantStatusAction } from '../redux/messages/slice'
 import { editChatroomName, exitChatroom, getChatroomList, getMessages } from '../redux/messages/thunk'
-import { socket, useAppDispatch, useAppSelector } from '../store'
+import { PREFIX, socket, useAppDispatch, useAppSelector } from '../store'
 import { ConfirmationHub } from './ConfirmationHub'
 
 export default function Messages() {
@@ -23,6 +23,16 @@ export default function Messages() {
       || (chatroom.participants.find(participant => (participant.participantName !== username && participant.participantName.toLowerCase().includes(search.toLowerCase()))
         || participant.participantNickname?.toLowerCase().includes(search.toLowerCase()))))
 
+  //get saved message color from local storage
+  useEffect(() => {
+    if (!chatroomList) return
+    for (let chatroom of chatroomList){
+      const savedColor = window.localStorage.getItem(`${PREFIX}chatroom-${chatroom.chatroomId}-messageBackground`)
+      if (savedColor){
+        dispatch(setMessageColorAction({ chatroomId: chatroom.chatroomId, color: savedColor }))
+      } 
+    }
+  }, [chatroomList])
 
   useEffect(() => {
     return () => {
@@ -38,15 +48,15 @@ export default function Messages() {
     })
   }, [chatroomList])
 
-  useEffect(()=>{
+  useEffect(() => {
     socket.on('sendMessageResponse', (chatroomId) => {
       dispatch(getMessages(chatroomId))
-  });
+    });
   }, [chatroomList])
 
-  useEffect(()=>{
+  useEffect(() => {
     socket.on('toggleParticipantStatusResponse', (data) => {
-      dispatch(toggleParticipantStatusAction({chatroomId: data.chatroomId, participantId: data.participantId, isDeleted: data.isDeleted}))
+      dispatch(toggleParticipantStatusAction({ chatroomId: data.chatroomId, participantId: data.participantId, isDeleted: data.isDeleted }))
     });
   }, [chatroomList])
 
@@ -95,29 +105,29 @@ export default function Messages() {
 
   return (
     <div id='content-container' style={{ overflow: 'auto', height: '75vh' }}>
-      <Input.Wrapper label="Search" style={{margin: '2px'}}>
+      <Input.Wrapper label="Search" style={{ margin: '2px' }}>
         <Input
           value={search}
-          icon={<IconSearch size={20}/>}
-          placeholder= 'Username / Group Name'
+          icon={<IconSearch size={20} />}
+          placeholder='Username / Group Name'
           onChange={(e) => setSearch(e.currentTarget.value)}
           rightSection={search.length ? <IconX size={16} onClick={() => setSearch('')} /> : undefined}
         />
       </Input.Wrapper>
       <div>
         {filteredChatroomList && filteredChatroomList.map(chatroom => (
-          <Tooltip 
-            key={chatroom.chatroomId} 
-            disabled={!chatroom.isGroup || !!(chatroom.chatroomName && chatroom.chatroomName.length <= 24)} 
+          <Tooltip
+            key={chatroom.chatroomId}
+            disabled={!chatroom.isGroup || !!(chatroom.chatroomName && chatroom.chatroomName.length <= 24)}
             label={chatroom.chatroomName || "Double Click to Edit Name"}
-            >
+          >
             <div style={{ position: 'relative', overflowY: 'hidden', overflowX: 'visible' }}>
               <Card
                 shadow="sm"
                 radius="md"
                 withBorder
                 className='text-center d-flex flex-column justify-content-center'
-                style={{minHeight: '70px', cursor:'pointer', backgroundColor: selected === chatroom.chatroomId? theme.primaryColor : undefined }}
+                style={{ minHeight: '70px', cursor: 'pointer', backgroundColor: selected === chatroom.chatroomId ? theme.primaryColor : undefined }}
                 onClick={() => dispatch(setSelectedChatroomAction(chatroom.chatroomId))}
               >
                 {chatroom.isGroup && <Badge
@@ -142,16 +152,16 @@ export default function Messages() {
 
                 {chatroom.isGroup ?
                   chatroom.participants.filter(participant => participant.isDeleted === false).map(participant => (participant.participantNickname || participant.participantName))
-                  .map(name => name === username ? 'You' : name).sort().join(', ') :
+                    .map(name => name === username ? 'You' : name).sort().join(', ') :
                   chatroom.participants.map(participant =>
                     participant.participantId !== userId && (participant.participantNickname || participant.participantName)
-                    )
-                  }
-                
-                <Tooltip 
-                  onMouseEnter={e=>e.stopPropagation()}
+                  )
+                }
+
+                <Tooltip
+                  onMouseEnter={e => e.stopPropagation()}
                   label={chatroom.isGroup ? "Quit group" : "Archive chat"}
-                  >
+                >
                   <span
                     style={{ position: 'absolute', top: '0px', right: '5px', padding: '0px' }}
                     onClick={() => handleDelete(chatroom.chatroomId)}

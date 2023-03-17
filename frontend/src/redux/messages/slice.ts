@@ -6,6 +6,7 @@ type Chatroom = {
     chatroomOwner: number,
     ownerName: string,
     isGroup: boolean,
+    myMessageColor?: string,
     participants: {
         participantId: number
         participantNickname?: string
@@ -118,6 +119,15 @@ const getMessages: CaseReducer<MessagesState, PayloadAction<{messageList: Messag
     }
 };
 
+const setMessageColor: CaseReducer<MessagesState, PayloadAction<{chatroomId: number, color: string}>> = (state, action) => {
+    for (let chatroom of state.chatroomList!){
+        if(chatroom.chatroomId === action.payload.chatroomId) {
+            chatroom.myMessageColor = action.payload.color
+            return
+        }
+    }
+};
+
 const messagesSlice = createSlice({
     name: 'messages',
     initialState,
@@ -132,7 +142,8 @@ const messagesSlice = createSlice({
         getMessages,
         exitChatroom,
         toggleParticipantStatus,
-        clearChatroomList
+        clearChatroomList,
+        setMessageColor
     }
 });
 
@@ -147,7 +158,8 @@ export const {
     getMessages: getMessagesAction,
     exitChatroom: exitChatroomAction,
     toggleParticipantStatus: toggleParticipantStatusAction,
-    clearChatroomList: clearChatroomListAction
+    clearChatroomList: clearChatroomListAction,
+    setMessageColor: setMessageColorAction
 } = messagesSlice.actions;
 
 export default messagesSlice.reducer;

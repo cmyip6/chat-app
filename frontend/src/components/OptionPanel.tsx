@@ -7,7 +7,7 @@ import ThemeControl from './ThemeControl';
 
 export default function OptionPanel() {
     const savedSize = window.localStorage.getItem(`${PREFIX}optionHeight`)
-    const [size, setSize] = useState((savedSize && parseInt(savedSize)) || 250);
+    const [size, setSize] = useState((savedSize && parseInt(savedSize)) || 550);
     const theme = useMantineTheme()
 
     // save value after resizing
@@ -17,7 +17,6 @@ export default function OptionPanel() {
 
     // Side Panel resize
     const mouseDownHandler = (mouseDownEvent: React.MouseEvent) => {
-        console.log(mouseDownEvent)
         mouseDownEvent.preventDefault()
         const startSize = size;
         const startPosition = mouseDownEvent.pageY;
@@ -56,7 +55,7 @@ export default function OptionPanel() {
                     <span
                         id='option-panel-resize-icon'
                         style={{ cursor: 'pointer' }}
-                        onClick={() => size >= 100 ? setSize(20) : size === 20 ? setSize(250) : null}
+                        onClick={() => size >= 100 ? setSize(20) : size === 20 ? setSize(550) : null}
                         onMouseDown={mouseDownHandler}
                     >
                     {
