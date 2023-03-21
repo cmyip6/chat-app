@@ -1,5 +1,5 @@
 import { Badge, Button, HoverCard, Loader, Tooltip, useMantineTheme } from '@mantine/core'
-import { IconSend } from '@tabler/icons-react'
+import { IconArrowBigDownLines, IconSend } from '@tabler/icons-react'
 import React, { useEffect, useRef, useState } from 'react'
 import { Form, InputGroup, Container } from 'react-bootstrap'
 import { setTargetUserAction } from '../redux/contacts/slice'
@@ -17,7 +17,7 @@ export default function Conversations() {
     const userId = useAppSelector(state => state.auth.userId)!
     const username = useAppSelector(state => state.auth.username)!
     const selectedChatroom = useAppSelector(state => state.messages.selectedChatroom)!
-    const messageColor = useAppSelector(state=>state.messages.chatroomList?.find(chatroom=>chatroom.chatroomId===selectedChatroom)?.myMessageColor)
+    const messageColor = useAppSelector(state => state.messages.chatroomList?.find(chatroom => chatroom.chatroomId === selectedChatroom)?.myMessageColor)
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const chatroomList = useAppSelector(state => state.messages.chatroomList)
     const [messageList] = chatroomList?.filter(chatroom => chatroom.chatroomId === selectedChatroom) || []
@@ -42,22 +42,22 @@ export default function Conversations() {
                 setRoomId(data.selectedChatroom)
                 setTyping(message)
                 const timer = setTimeout(() => { setTyping('') }, 1000)
-                
-                return ()=> clearTimeout(timer)
+
+                return () => clearTimeout(timer)
             }
         })
-        return ()=>{
+        return () => {
             socket.off('typingResponse')
-          }
+        }
     }, [selectedChatroom])
 
     useEffect(() => {
         socket.on('deleteMessageResponse', (messageId) => {
             dispatch(deleteMessageAction(messageId))
         })
-        return ()=>{
+        return () => {
             socket.off('deleteMessageResponse')
-          }
+        }
     }, [messageList])
 
     useEffect(() => {
@@ -111,7 +111,7 @@ export default function Conversations() {
 
     return (
         <div className='d-flex flex-column flex-grow-1 overflow-hidden' >
-            <div id='message-container' className='overflow-auto' style={{height: '100vh', position:'relative'}}>
+            <div id='message-container' className='overflow-auto' style={{ height: '100vh', position: 'relative' }}>
                 <div id='content-container' className='d-flex flex-column align-items-start justify-content-end px-3'>
                     {messageList && messageList.messageList.map((message, index) => {
                         const lastMessage = messageList.messageList.length - 1 === index
@@ -130,10 +130,10 @@ export default function Conversations() {
                                 <HoverCard shadow='xs' openDelay={500}>
                                     <HoverCard.Target>
                                         <Container
-                                            style={{ 
-                                                maxWidth: '400px', 
-                                                height: 'fit-content', 
-                                                backgroundColor: message.senderId !== userId ? 'white' : messageColor ? messageColor : theme.primaryColor 
+                                            style={{
+                                                maxWidth: '400px',
+                                                height: 'fit-content',
+                                                backgroundColor: message.senderId !== userId ? 'white' : messageColor ? messageColor : theme.primaryColor
                                             }}
                                             className={`rounded px-2 py-1 ${message.isSystemMessage || message.isDeleted
                                                 ? 'bg-secondary text-white' : message.senderId === userId
@@ -182,11 +182,26 @@ export default function Conversations() {
                             </div>
                         )
                     })}
-                    <p className='m-2 text-muted small' style={{width:'fit-content'}}>{roomId === selectedChatroom && typing && <>{typing}  <Loader variant="dots" /></>}</p>
                 </div>
             </div>
+            <p
+                className='m-2 text-muted small d-flex'
+                style={{ width: '100%', minHeight: '19px', justifyContent: 'space-between' }}
+            >
+                <div>
+                    {roomId === selectedChatroom && typing && <>{typing} < Loader variant="dots" /></>}
+                </div>
+                <Tooltip label='Scroll to bottom'>
+                    <Button
+                        variant='subtle'
+                        style={{ height: 'fit-content', padding: '0px', marginRight: '20px' }}
+                        onClick={() => lastMessageRef.current && lastMessageRef.current.scrollIntoView()}>
+                        <IconArrowBigDownLines size={20} />
+                    </Button>
+                </Tooltip>
+            </p>
             <Form onSubmit={handleSubmit}>
-                <Form.Group className='m-2' style={{position: 'relative'}}>
+                <Form.Group className='m-2' style={{ position: 'relative' }}>
                     <InputGroup>
                         <Form.Control
                             as='textarea'
