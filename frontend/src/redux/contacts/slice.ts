@@ -1,102 +1,127 @@
-import { CaseReducer, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { CaseReducer, createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 type Contacts = {
-    contactId: number, 
-    nickname: string | undefined,
-    isOnline?: boolean,
-    contactUsername: string,
+	contactId: number
+	nickname: string | undefined
+	isOnline?: boolean
+	contactUsername: string
 }
 
 export type ContactsList = Contacts[]
 
 export interface ContactState {
-    contactsList: ContactsList | null
-    checkUsername: boolean
-    setTargetUser: number | null
-    editTarget: number | null
+	contactsList: ContactsList | null
+	checkUsername: boolean
+	setTargetUser: number | null
+	editTarget: number | null
 }
 
 const initialState: ContactState = {
-    contactsList: null,
-    checkUsername: false,
-    setTargetUser: null,
-    editTarget: null
-};
+	contactsList: null,
+	checkUsername: false,
+	setTargetUser: null,
+	editTarget: null
+}
 
 const clearContactsList: CaseReducer<ContactState> = (state) => {
-    state.contactsList = null;
-};
+	state.contactsList = null
+}
 
-const getContactsList: CaseReducer<ContactState, PayloadAction<ContactsList>> = (state, action) => {
-    state.contactsList = action.payload;
-};
+const getContactsList: CaseReducer<
+	ContactState,
+	PayloadAction<ContactsList>
+> = (state, action) => {
+	state.contactsList = action.payload
+}
 
-const createContact: CaseReducer<ContactState, PayloadAction<Contacts>> = (state, action) => {
-    state.contactsList?.push(action.payload);
-};
+const createContact: CaseReducer<ContactState, PayloadAction<Contacts>> = (
+	state,
+	action
+) => {
+	state.contactsList?.push(action.payload)
+}
 
-const checkUsername: CaseReducer<ContactState, PayloadAction<boolean>> = (state, action) => {
-    state.checkUsername = action.payload;
-};
+const checkUsername: CaseReducer<ContactState, PayloadAction<boolean>> = (
+	state,
+	action
+) => {
+	state.checkUsername = action.payload
+}
 
-const setTargetUser: CaseReducer<ContactState, PayloadAction<number>> = (state, action) => {
-    state.setTargetUser = action.payload;
-};
+const setTargetUser: CaseReducer<ContactState, PayloadAction<number>> = (
+	state,
+	action
+) => {
+	state.setTargetUser = action.payload
+}
 
-const deleteContact: CaseReducer<ContactState, PayloadAction<number>> = (state, action) => {
-    state.contactsList = state.contactsList!.filter(contact=> contact.contactId !== action.payload)
-};
+const deleteContact: CaseReducer<ContactState, PayloadAction<number>> = (
+	state,
+	action
+) => {
+	state.contactsList = state.contactsList!.filter(
+		(contact) => contact.contactId !== action.payload
+	)
+}
 
-const setEditTarget: CaseReducer<ContactState, PayloadAction<number>> = (state, action) => {
-    state.editTarget = action.payload;
-};
+const setEditTarget: CaseReducer<ContactState, PayloadAction<number>> = (
+	state,
+	action
+) => {
+	state.editTarget = action.payload
+}
 
-const editContactName: CaseReducer<ContactState, PayloadAction<{contactId: number, editName: string}>> = (state, action) => {
-    for (let contact of state.contactsList!){
-        if (contact.contactId === action.payload.contactId){
-            contact.nickname = action.payload.editName
-            break
-        }
-    }
-};
+const editContactName: CaseReducer<
+	ContactState,
+	PayloadAction<{ contactId: number; editName: string }>
+> = (state, action) => {
+	for (let contact of state.contactsList!) {
+		if (contact.contactId === action.payload.contactId) {
+			contact.nickname = action.payload.editName
+			break
+		}
+	}
+}
 
-const toggleOnline: CaseReducer<ContactState, PayloadAction<{username: string, isOnline: boolean}>> = (state, action) => {
-    if (state.contactsList === null) return
-    for (let contact of state.contactsList){
-        if (contact.contactUsername === action.payload.username){
-            contact.isOnline = action.payload.isOnline
-            break
-        }
-    }
-};
-
+const toggleOnline: CaseReducer<
+	ContactState,
+	PayloadAction<{ username: string; isOnline: boolean }>
+> = (state, action) => {
+	if (state.contactsList === null) return
+	for (let contact of state.contactsList) {
+		if (contact.contactUsername === action.payload.username) {
+			contact.isOnline = action.payload.isOnline
+			break
+		}
+	}
+}
 
 const contactsSlice = createSlice({
-    name: 'contacts',
-    initialState,
-    reducers: {
-        clearContactsList,
-        checkUsername,
-        setTargetUser,
-        getContactsList,
-        createContact,
-        deleteContact,
-        setEditTarget,
-        editContactName,
-        toggleOnline
-    }
-});
+	name: 'contacts',
+	initialState,
+	reducers: {
+		clearContactsList,
+		checkUsername,
+		setTargetUser,
+		getContactsList,
+		createContact,
+		deleteContact,
+		setEditTarget,
+		editContactName,
+		toggleOnline
+	}
+})
 
 export const {
-    clearContactsList: clearContactsListAction,
-    checkUsername: checkUsernameAction,
-    setTargetUser: setTargetUserAction,
-    getContactsList: getContactsListAction,
-    createContact: createContactAction,
-    deleteContact: deleteContactAction,
-    setEditTarget: setEditModeAction,
-    editContactName: editContactNameAction,
-    toggleOnline: toggleOnlineAction
-} = contactsSlice.actions;
+	clearContactsList: clearContactsListAction,
+	checkUsername: checkUsernameAction,
+	setTargetUser: setTargetUserAction,
+	getContactsList: getContactsListAction,
+	createContact: createContactAction,
+	deleteContact: deleteContactAction,
+	setEditTarget: setEditModeAction,
+	editContactName: editContactNameAction,
+	toggleOnline: toggleOnlineAction
+} = contactsSlice.actions
 
-export default contactsSlice.reducer;
+export default contactsSlice.reducer

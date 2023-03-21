@@ -1,28 +1,30 @@
-import { ColorScheme } from '@mantine/core';
-import { CaseReducer, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { ColorScheme } from '@mantine/core'
+import { CaseReducer, createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 export type OptionState = {
-    colorTheme: ColorScheme
-};
+	colorTheme: ColorScheme
+}
 
 const initialState: OptionState = {
-    colorTheme: 'light'
-    }
+	colorTheme: 'light'
+}
 
-const toggleColorScheme: CaseReducer<OptionState, PayloadAction<ColorScheme>> = (state, action) => {
-    state.colorTheme = action.payload
-};
+const toggleColorScheme: CaseReducer<
+	OptionState,
+	PayloadAction<ColorScheme>
+> = (state, action) => {
+	state.colorTheme = action.payload
+}
 
 const optionSlice = createSlice({
-    name: 'option',
-    initialState,
-    reducers: {
-        toggleColorScheme
-    }
-});
+	name: 'option',
+	initialState,
+	reducers: {
+		toggleColorScheme
+	}
+})
 
-export const { 
-    toggleColorScheme: toggleColorSchemeAction,
-    } = optionSlice.actions;
+export const { toggleColorScheme: toggleColorSchemeAction } =
+	optionSlice.actions
 
-export default optionSlice.reducer;
+export default optionSlice.reducer

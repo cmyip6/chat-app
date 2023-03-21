@@ -9,33 +9,33 @@ import Conversations from './Conversations'
 import SidePanel from './SidePanel'
 
 export default function Home() {
-  const dispatch = useAppDispatch()
-  const login = useAppSelector(state => state.auth.isLoggedIn)
-  const userId = useAppSelector((state) => state.auth.userId);
-  const contactList = useAppSelector((state) => state.contacts.contactsList);
+	const dispatch = useAppDispatch()
+	const login = useAppSelector((state) => state.auth.isLoggedIn)
+	const userId = useAppSelector((state) => state.auth.userId)
+	const contactList = useAppSelector((state) => state.contacts.contactsList)
 
-  useEffect(() => {
-    if (login && userId) {
-      dispatch(getContactList(userId))
-      dispatch(getChatroomList(userId))
-    }
-  }, [login])
+	useEffect(() => {
+		if (login && userId) {
+			dispatch(getContactList(userId))
+			dispatch(getChatroomList(userId))
+		}
+	}, [login])
 
-  useEffect(() => {
-    if (contactList === null) return
-    socket.on('getOnlineUserListResponse', (contactList) => {
-      dispatch(getContactsListAction(contactList))
-    });
+	useEffect(() => {
+		if (contactList === null) return
+		socket.on('getOnlineUserListResponse', (contactList) => {
+			dispatch(getContactsListAction(contactList))
+		})
 
-    return ()=>{
-      socket.off('getOnlineUserListResponse')
-    }
-  }, [contactList])
+		return () => {
+			socket.off('getOnlineUserListResponse')
+		}
+	}, [contactList])
 
-  return (
-    <div className='d-flex' style={{height:'100vh'}}>
-      <SidePanel/>
-      <Conversations/>
-    </div>
-  )
+	return (
+		<div className='d-flex' style={{ height: '100vh' }}>
+			<SidePanel />
+			<Conversations />
+		</div>
+	)
 }

@@ -1,7 +1,7 @@
-import type { Knex } from 'knex';
-import dotenv from 'dotenv';
+import type { Knex } from 'knex'
+import dotenv from 'dotenv'
 
-dotenv.config();
+dotenv.config()
 
 export const config: { [key: string]: Knex.Config } = {
 	development: {
@@ -37,6 +37,6 @@ export const config: { [key: string]: Knex.Config } = {
 			tableName: 'knex_migrations'
 		}
 	}
-};
+}
 
-module.exports = config;
+module.exports = config

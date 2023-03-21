@@ -1,288 +1,339 @@
-import { Knex } from "knex";
+import { Knex } from 'knex'
 
 export class MessagesService {
-    constructor(private knex: Knex) { }
+	constructor(private knex: Knex) {}
 
-    async sendMessage(userId: number, chatroomId: number, text: string) {
-        const txn = await this.knex.transaction();
-        try {
+	async sendMessage(userId: number, chatroomId: number, text: string) {
+		const txn = await this.knex.transaction()
+		try {
+			const [user] = await txn
+				.select('username')
+				.from('users')
+				.where('id', userId)
 
-            const [user] = await txn
-                .select('username')
-                .from('users')
-                .where('id', userId)
+			const [message] = await txn('messages')
+				.insert({
+					sender: userId,
+					content: text,
+					chatroom_id: chatroomId
+				})
+				.returning('*')
 
-            const [message] = await txn('messages')
-                .insert({
-                    sender: userId,
-                    content: text,
-                    chatroom_id: chatroomId
-                })
-                .returning('*')
+			message.sender_username = user.username
 
-            message.sender_username = user.username
+			await txn.commit()
+			return message
+		} catch (e) {
+			await txn.rollback()
+			throw e
+		}
+	}
 
-            await txn.commit();
-            return message
+	async deleteMessage(userId: number, messageId: number) {
+		const txn = await this.knex.transaction()
+		try {
+			const check = await txn('messages')
+				.update({
+					is_deleted: true
+				})
+				.where('id', messageId)
+				.where('sender', userId)
+				.returning('messages.is_deleted')
 
-        } catch (e) {
-            await txn.rollback();
-            throw e;
-        }
-    }
+			await txn.commit()
+			return check
+		} catch (e) {
+			await txn.rollback()
+			throw e
+		}
+	}
 
-    async deleteMessage(userId: number, messageId: number) {
-        const txn = await this.knex.transaction();
-        try {
-            const check = await txn('messages')
-                .update({
-                    is_deleted: true
-                })
-                .where('id', messageId)
-                .where('sender', userId)
-                .returning('messages.is_deleted')
+	async getMessages(chatroomId: number) {
+		try {
+			const messageList = await this.knex
+				.select(
+					'messages.id as messageId',
+					'messages.sender as senderId',
+					'users.username as senderUsername',
+					'messages.content',
+					'messages.is_deleted as isDeleted',
+					'messages.created_at as createdAt',
+					'messages.system_message as isSystemMessage'
+				)
+				.from('messages')
+				.where('chatroom_id', chatroomId)
+				.join('users', 'users.id', 'sender')
+				.orderBy('messages.created_at', 'asc')
+			return messageList
+		} catch (e) {
+			throw e
+		}
+	}
 
-            await txn.commit()
-            return check
-        } catch (e) {
-            await txn.rollback();
-            throw e;
-        }
+	async editChatroomName(
+		chatroomId: number,
+		chatroomName: string,
+		userId: number
+	) {
+		const txn = await this.knex.transaction()
+		try {
+			await txn('chatrooms')
+				.update({
+					name: chatroomName
+				})
+				.where('id', chatroomId)
 
-    }
+			await txn('messages').insert({
+				sender: userId,
+				chatroom_id: chatroomId,
+				system_message: true,
+				content: `Chatroom name has been changed to '${chatroomName}'`
+			})
 
-    async getMessages(chatroomId: number) {
-        try {
-            const messageList = await this.knex
-                .select(
-                    'messages.id as messageId',
-                    'messages.sender as senderId',
-                    'users.username as senderUsername',
-                    'messages.content',
-                    'messages.is_deleted as isDeleted',
-                    'messages.created_at as createdAt',
-                    'messages.system_message as isSystemMessage'
-                )
-                .from('messages')
-                .where('chatroom_id', chatroomId)
-                .join('users', 'users.id', 'sender')
-                .orderBy('messages.created_at', 'asc')
-            return messageList;
-        } catch (e) {
-            throw e
-        }
-    }
+			await txn.commit()
+			return true
+		} catch (e) {
+			await txn.rollback()
+			throw e
+		}
+	}
 
-    async editChatroomName(chatroomId: number, chatroomName: string, userId: number) {
-        const txn = await this.knex.transaction();
-        try {
-            await txn('chatrooms')
-                .update({
-                    name: chatroomName
-                })
-                .where('id', chatroomId);
+	async createSystemMessage(
+		chatroomId: number,
+		senderId: number,
+		message: string
+	) {
+		await this.knex('messages').insert({
+			sender: senderId,
+			chatroom_id: chatroomId,
+			system_message: true,
+			content: message
+		})
+	}
 
-            await txn('messages')
-                .insert({
-                    sender: userId,
-                    chatroom_id: chatroomId,
-                    system_message: true,
-                    content: `Chatroom name has been changed to '${chatroomName}'`
-                })
+	async exitChatroom(chatroomId: number, participantId: number) {
+		const txn = await this.knex.transaction()
+		try {
+			await txn('participation')
+				.update({
+					is_deleted: true
+				})
+				.where('user_id', participantId)
+				.where('chatroom_id', chatroomId)
 
-            await txn.commit()
-            return true
-        } catch (e) {
-            await txn.rollback();
-            throw e;
-        }
+			await txn('messages').insert({
+				sender: participantId,
+				chatroom_id: chatroomId,
+				system_message: true,
+				content: 'This user is no longer in the chat.'
+			})
 
-    }
+			await txn.commit()
+			return true
+		} catch (e) {
+			await txn.rollback()
+			throw e
+		}
+	}
 
-    async createSystemMessage(chatroomId: number, senderId: number, message: string) {
-        await this.knex('messages')
-            .insert({
-                sender: senderId,
-                chatroom_id: chatroomId,
-                system_message: true,
-                content: message
-            })
-    }
+	async checkChatroom(nameList: string[]) {
+		const txn = await this.knex.transaction()
+		try {
+			const [personOne] = await txn('users').where(
+				'username',
+				nameList[0]
+			)
+			const [personTwo] = await txn('users').where(
+				'username',
+				nameList[1]
+			)
 
-    async exitChatroom(chatroomId: number, participantId: number) {
-        const txn = await this.knex.transaction();
-        try {
-            await txn('participation')
-                .update({
-                    is_deleted: true
-                })
-                .where('user_id', participantId)
-                .where('chatroom_id', chatroomId)
+			const personOneChatroomList = await txn
+				.select('chatrooms.id', 'participation.id as participationId')
+				.from('chatrooms')
+				.join(
+					'participation',
+					'chatrooms.id',
+					'participation.chatroom_id'
+				)
+				.andWhere('participation.user_id', personOne.id)
+				.andWhere('chatrooms.group', false)
 
+			const personTwoChatroomList = await txn
+				.select('chatrooms.id', 'participation.id as participationId')
+				.from('chatrooms')
+				.join(
+					'participation',
+					'chatrooms.id',
+					'participation.chatroom_id'
+				)
+				.andWhere('participation.user_id', personTwo.id)
+				.andWhere('chatrooms.group', false)
 
-            await txn('messages')
-                .insert({
-                    sender: participantId,
-                    chatroom_id: chatroomId,
-                    system_message: true,
-                    content: 'This user is no longer in the chat.'
-                })
+			if (personOneChatroomList.length && personTwoChatroomList.length) {
+				for (let i = 0; i < personOneChatroomList.length; i++) {
+					for (let j = 0; j < personTwoChatroomList.length; j++) {
+						if (
+							personOneChatroomList[i].id ===
+							personTwoChatroomList[j].id
+						) {
+							await txn('participation')
+								.update({ is_deleted: false })
+								.where(
+									'id',
+									personOneChatroomList[i].participationId
+								)
+							await txn('participation')
+								.update({ is_deleted: false })
+								.where(
+									'id',
+									personTwoChatroomList[j].participationId
+								)
+							await txn.commit()
+							return personTwoChatroomList[j].id
+						}
+					}
+				}
+			} else {
+				await txn.rollback()
+				return false
+			}
+		} catch (e) {
+			await txn.rollback()
+			throw e
+		}
+	}
 
-            await txn.commit()
-            return true
-        } catch (e) {
-            await txn.rollback();
-            throw e;
-        }
-    }
+	async getChatroomList(userId: number) {
+		const txn = await this.knex.transaction()
 
-    async checkChatroom(nameList: string[]) {
-        const txn = await this.knex.transaction();
-        try {
-            const [personOne] = await txn('users').where('username', nameList[0])
-            const [personTwo] = await txn('users').where('username', nameList[1])
+		try {
+			const contactList = await txn
+				.select('*')
+				.from('contacts')
+				.where('contacts.owner', userId)
 
-            const personOneChatroomList = await txn.select('chatrooms.id', 'participation.id as participationId')
-                .from('chatrooms')
-                .join('participation', 'chatrooms.id', 'participation.chatroom_id')
-                .andWhere('participation.user_id', personOne.id)
-                .andWhere('chatrooms.group', false)
+			const chatroomList = await txn
+				.select(
+					'chatrooms.created_at',
+					'chatrooms.id as chatroomId',
+					'chatrooms.name as chatroomName',
+					'chatrooms.owner as chatroomOwner',
+					'users.username as ownerName',
+					'chatrooms.group as isGroup'
+				)
+				.from('chatrooms')
+				.join(
+					'participation',
+					'participation.chatroom_id',
+					'chatrooms.id'
+				)
+				.join('users', 'participation.user_id', 'users.id')
+				.where('participation.user_id', userId)
+				.where('participation.is_deleted', false)
+				.orderBy('chatrooms.created_at', 'desc')
 
-            const personTwoChatroomList = await txn.select('chatrooms.id', 'participation.id as participationId')
-                .from('chatrooms')
-                .join('participation', 'chatrooms.id', 'participation.chatroom_id')
-                .andWhere('participation.user_id', personTwo.id)
-                .andWhere('chatrooms.group', false)
+			for (let chatroom of chatroomList) {
+				const participants = await txn
+					.select(
+						'participation.id as participationId',
+						'users.username as participantName',
+						'participation.user_id as participantId',
+						'participation.is_deleted as isDeleted'
+					)
+					.from('participation')
+					.join('users', 'participation.user_id', 'users.id')
+					.where('participation.chatroom_id', chatroom.chatroomId)
 
+				for (let i = 0; i < participants.length; i++) {
+					for (let j = 0; j < contactList.length; j++) {
+						if (
+							contactList[j].user ===
+							participants[i].participantId
+						) {
+							participants[i].participantNickname =
+								contactList[j].nickname
+							break
+						}
+					}
+				}
 
-            if (personOneChatroomList.length && personTwoChatroomList.length) {
-                for (let i = 0; i < personOneChatroomList.length; i++) {
-                    for (let j = 0; j < personTwoChatroomList.length; j++) {
-                        if (personOneChatroomList[i].id === personTwoChatroomList[j].id) {
-                            await txn('participation').update({ is_deleted: false }).where('id', personOneChatroomList[i].participationId)
-                            await txn('participation').update({ is_deleted: false }).where('id', personTwoChatroomList[j].participationId)
-                            await txn.commit();
-                            return personTwoChatroomList[j].id
-                        }
-                    }
-                }
-            } else {
-                await txn.rollback();
-                return false
-            }
-        } catch (e) {
-            await txn.rollback();
-            throw e;
-        }
-    }
+				chatroom.participants = participants
+				chatroom.messageList = await this.getMessages(
+					chatroom.chatroomId
+				)
+			}
 
-    async getChatroomList(userId: number) {
-        const txn = await this.knex.transaction();
+			await txn.commit()
+			return chatroomList
+		} catch (e) {
+			await txn.rollback()
+			throw e
+		}
+	}
 
-        try {
+	async createChatroom(
+		nameList: string[],
+		ownerId: number,
+		chatroomName?: string,
+		isGroup: boolean = true
+	) {
+		const txn = await this.knex.transaction()
+		try {
+			const contactList = await txn
+				.select('*')
+				.from('contacts')
+				.where('contacts.owner', ownerId)
 
-            const contactList = await txn
-                .select('*')
-                .from('contacts')
-                .where('contacts.owner', userId)
+			const [chatroom] = await txn('chatrooms')
+				.insert({
+					owner: ownerId,
+					name: chatroomName || null,
+					group: isGroup
+				})
+				.returning('*')
 
-            const chatroomList = await txn
-                .select('chatrooms.created_at', 'chatrooms.id as chatroomId', 'chatrooms.name as chatroomName', 'chatrooms.owner as chatroomOwner', 'users.username as ownerName', 'chatrooms.group as isGroup')
-                .from('chatrooms')
-                .join('participation', 'participation.chatroom_id', 'chatrooms.id')
-                .join('users', 'participation.user_id', 'users.id')
-                .where('participation.user_id', userId)
-                .where('participation.is_deleted', false)
-                .orderBy('chatrooms.created_at', 'desc')
+			const participants = []
+			for (let name of nameList) {
+				const [user] = await txn('users').where('username', name)
+				await txn('participation').insert({
+					user_id: user.id,
+					chatroom_id: chatroom.id
+				})
 
-            for (let chatroom of chatroomList) {
-                const participants = await txn
-                    .select('participation.id as participationId', 'users.username as participantName', 'participation.user_id as participantId', 'participation.is_deleted as isDeleted')
-                    .from('participation')
-                    .join('users', 'participation.user_id', 'users.id')
-                    .where('participation.chatroom_id', chatroom.chatroomId)
+				let participantNickname = null
 
-                for (let i = 0; i < participants.length; i++) {
-                    for (let j = 0; j < contactList.length; j++) {
-                        if (contactList[j].user === participants[i].participantId) {
-                            participants[i].participantNickname = contactList[j].nickname
-                            break
-                        }
-                    }
-                }
+				for (let j = 0; j < contactList.length; j++) {
+					if (contactList[j].user === user.id) {
+						participantNickname = contactList[j].nickname
+						break
+					}
+				}
 
-                chatroom.participants = participants
-                chatroom.messageList = await this.getMessages(chatroom.chatroomId)
-            }
+				const obj = {
+					participantName: name,
+					participantId: user.id,
+					participantNickname: participantNickname
+				}
 
-            await txn.commit();
-            return chatroomList;
-        } catch (e) {
-            await txn.rollback();
-            throw e;
-        }
-    }
+				participants.push(obj)
+			}
 
-    async createChatroom(nameList: string[], ownerId: number, chatroomName?: string, isGroup: boolean = true) {
-        const txn = await this.knex.transaction();
-        try {
+			await txn.commit()
+			return { chatroomId: chatroom.id, participants }
+		} catch (e) {
+			await txn.rollback()
+			throw e
+		}
+	}
 
-            const contactList = await txn
-                .select('*')
-                .from('contacts')
-                .where('contacts.owner', ownerId)
-
-            const [chatroom] = await txn('chatrooms')
-                .insert({
-                    owner: ownerId,
-                    name: chatroomName || null,
-                    group: isGroup
-                })
-                .returning('*')
-
-            const participants = []
-            for (let name of nameList) {
-                const [user] = await txn('users').where('username', name)
-                await txn('participation').insert({
-                    user_id: user.id,
-                    chatroom_id: chatroom.id
-                })
-
-                let participantNickname = null
-
-                for (let j = 0; j < contactList.length; j++) {
-                    if (contactList[j].user === user.id) {
-                        participantNickname = contactList[j].nickname
-                        break
-                    }
-                }
-
-                const obj = {
-                    participantName: name,
-                    participantId: user.id,
-                    participantNickname: participantNickname
-                }
-
-                participants.push(obj)
-            }
-
-
-            await txn.commit();
-            return { chatroomId: chatroom.id, participants }
-
-        } catch (e) {
-            await txn.rollback();
-            throw e;
-        }
-    }
-
-    async getUser(id: number) {
-        const [user] = await this.knex('users').where('id', id);
-        if (user) {
-            delete user.password;
-            return user;
-        } else {
-            return;
-        }
-    }
+	async getUser(id: number) {
+		const [user] = await this.knex('users').where('id', id)
+		if (user) {
+			delete user.password
+			return user
+		} else {
+			return
+		}
+	}
 }

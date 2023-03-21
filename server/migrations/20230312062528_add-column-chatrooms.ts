@@ -1,16 +1,13 @@
-import { Knex } from "knex";
-
+import { Knex } from 'knex'
 
 export async function up(knex: Knex): Promise<void> {
-    await knex.schema.alterTable('chatrooms', (table) => {
-		table.boolean('group').defaultTo(true).notNullable();
-	});
+	await knex.schema.alterTable('chatrooms', (table) => {
+		table.boolean('group').defaultTo(true).notNullable()
+	})
 }
-
 
 export async function down(knex: Knex): Promise<void> {
-    await knex.schema.alterTable('chatrooms', (table) => {
+	await knex.schema.alterTable('chatrooms', (table) => {
 		table.dropColumn('group')
-	});
+	})
 }
-
