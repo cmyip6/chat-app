@@ -1,10 +1,11 @@
-import { Badge, Card, Input, Tooltip, useMantineTheme } from '@mantine/core'
-import { IconCheck, IconSearch, IconX } from '@tabler/icons-react'
+import { Badge, Button, Card, Input, Tooltip, useMantineTheme } from '@mantine/core'
+import { IconCheck, IconSearch, IconUserPlus, IconX } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 import { editChatroomModeAction, setMessageColorAction, setSelectedChatroomAction, toggleParticipantStatusAction } from '../redux/messages/slice'
 import { editChatroomName, exitChatroom, getChatroomList, getMessages } from '../redux/messages/thunk'
 import { PREFIX, socket, useAppDispatch, useAppSelector } from '../store'
 import { ConfirmationHub } from './ConfirmationHub'
+import NewMemberModal from './NewMemberModal'
 
 export default function Messages() {
   const dispatch = useAppDispatch()
@@ -16,6 +17,8 @@ export default function Messages() {
   const [editName, setEditName] = useState('')
   const [search, setSearch] = useState('')
   const [opened, setOpened] = useState(false)
+  const [memberModalOpened, setMemberModalOpened] = useState(false)
+  const [targetChatroomId, setTargetChatroomId] = useState(0)
   const [deleteTarget, setDeleteTarget] = useState(0)
   const theme = useMantineTheme()
   const filteredChatroomList = chatroomList && chatroomList
@@ -26,11 +29,11 @@ export default function Messages() {
   //get saved message color from local storage
   useEffect(() => {
     if (!chatroomList) return
-    for (let chatroom of chatroomList){
+    for (let chatroom of chatroomList) {
       const savedColor = window.localStorage.getItem(`${PREFIX}chatroom-${chatroom.chatroomId}-messageBackground`)
-      if (savedColor){
+      if (savedColor) {
         dispatch(setMessageColorAction({ chatroomId: chatroom.chatroomId, color: savedColor }))
-      } 
+      }
     }
   }, [chatroomList])
 
@@ -46,7 +49,7 @@ export default function Messages() {
     socket.on('createChatroomResponse', (chatroom) => {
       dispatch(getChatroomList(userId))
     })
-    return ()=>{
+    return () => {
       socket.off('createChatroomResponse')
     }
   }, [chatroomList])
@@ -55,7 +58,7 @@ export default function Messages() {
     socket.on('sendMessageResponse', (chatroomId) => {
       dispatch(getMessages(chatroomId))
     });
-    return ()=>{
+    return () => {
       socket.off('sendMessageResponse')
     }
   }, [chatroomList])
@@ -64,7 +67,7 @@ export default function Messages() {
     socket.on('toggleParticipantStatusResponse', (data) => {
       dispatch(toggleParticipantStatusAction({ chatroomId: data.chatroomId, participantId: data.participantId, isDeleted: data.isDeleted }))
     });
-    return ()=>{
+    return () => {
       socket.off('toggleParticipantStatusResponse')
     }
   }, [chatroomList])
@@ -110,6 +113,16 @@ export default function Messages() {
     if (!userId) return
     dispatch(exitChatroom(deleteTarget, userId))
     onClose()
+  }
+
+  function inviteNewMemberHandler(chatroomId: number){
+    setTargetChatroomId(chatroomId)
+    setMemberModalOpened(true)
+  }
+
+  function onAddNewMemberModalClose(){
+    setTargetChatroomId(0)
+    setMemberModalOpened(false)
   }
 
   return (
@@ -159,13 +172,25 @@ export default function Messages() {
                     chatroom.chatroomName}
                 </Badge>}
 
-                {chatroom.isGroup ?
-                  chatroom.participants.filter(participant => participant.isDeleted === false).map(participant => (participant.participantNickname || participant.participantName))
-                    .map(name => name === username ? 'You' : name).sort().join(', ') :
-                  chatroom.participants.map(participant =>
-                    participant.participantId !== userId && (participant.participantNickname || participant.participantName)
-                  )
-                }
+                <span>
+                  {chatroom.isGroup ?
+                    chatroom.participants.filter(participant => participant.isDeleted === false).map(participant => (participant.participantNickname || participant.participantName))
+                      .map(name => name === username ? 'You' : name).sort().join(', ') :
+                    chatroom.participants.map(participant =>
+                      participant.participantId !== userId && (participant.participantNickname || participant.participantName)
+                    )
+                  }
+                  {chatroom.isGroup &&
+                    <Badge
+                      style={{padding: '1px', marginLeft:'5px'}}
+                      onClick={()=>inviteNewMemberHandler(chatroom.chatroomId)}
+                      >
+                      <IconUserPlus
+                        size={18}
+                      />
+                    </Badge>
+                  }
+                </span>
 
                 <Tooltip
                   onMouseEnter={e => e.stopPropagation()}
@@ -197,6 +222,7 @@ export default function Messages() {
         ))}
       </div>
       <ConfirmationHub isShow={opened} onClose={onClose} onDelete={onDelete} />
+      <NewMemberModal isShow={memberModalOpened} onClose={onAddNewMemberModalClose} chatroomId={targetChatroomId}/>
     </div>
   )
 }

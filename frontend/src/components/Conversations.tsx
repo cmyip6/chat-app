@@ -23,6 +23,7 @@ export default function Conversations() {
     const [messageList] = chatroomList?.filter(chatroom => chatroom.chatroomId === selectedChatroom) || []
     const contactList = useAppSelector(state => state.contacts.contactsList)
     const lastMessageRef = useRef<HTMLInputElement>(null)
+    const messageBox = document.getElementById('content-container')
     const [typing, setTyping] = useState('')
     const [roomId, setRoomId] = useState(0)
     const [opened, setOpened] = useState(false)
@@ -191,14 +192,19 @@ export default function Conversations() {
                 <div>
                     {roomId === selectedChatroom && typing && <>{typing} < Loader variant="dots" /></>}
                 </div>
+
                 <Tooltip label='Scroll to bottom'>
                     <Button
                         variant='subtle'
                         style={{ height: 'fit-content', padding: '0px', marginRight: '20px' }}
-                        onClick={() => lastMessageRef.current && lastMessageRef.current.scrollIntoView()}>
+                        onClick={() => {
+                            lastMessageRef.current && lastMessageRef.current.scrollIntoView({ behavior: 'smooth' })
+                        }}
+                    >
                         <IconArrowBigDownLines size={20} />
                     </Button>
                 </Tooltip>
+
             </p>
             <Form onSubmit={handleSubmit}>
                 <Form.Group className='m-2' style={{ position: 'relative' }}>

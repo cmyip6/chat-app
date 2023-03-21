@@ -1,5 +1,13 @@
 import { CaseReducer, createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+type Participant = {
+    participantId: number
+    participantNickname?: string
+    participantName: string,
+    participationId: number,
+    isDeleted: boolean
+}
+
 type Chatroom = {
     chatroomId: number,
     chatroomName?: string,
@@ -7,18 +15,12 @@ type Chatroom = {
     ownerName: string,
     isGroup: boolean,
     myMessageColor?: string,
-    participants: {
-        participantId: number
-        participantNickname?: string
-        participantName: string,
-        participationId: number,
-        isDeleted: boolean
-    }[],
+    participants: Participant[],
     messageList: MessageList
 }
 
 type Message = {
-    messageId:number,
+    messageId: number,
     senderId: number,
     senderUsername: string,
     content: string,
@@ -55,6 +57,15 @@ const createChatroom: CaseReducer<MessagesState, PayloadAction<Chatroom>> = (sta
     state.chatroomList!.unshift(action.payload);
 };
 
+const addMember: CaseReducer<MessagesState, PayloadAction<{ chatroomId: number, participantList: Participant[] }>> = (state, action) => {
+    for (let chatroom of state.chatroomList!){
+        if(chatroom.chatroomId === action.payload.chatroomId){
+            chatroom.participants.concat(action.payload.participantList)
+            return
+        }
+    }
+};
+
 const setSelectedChatroom: CaseReducer<MessagesState, PayloadAction<number>> = (state, action) => {
     state.selectedChatroom = action.payload
 };
@@ -63,8 +74,8 @@ const editChatroomMode: CaseReducer<MessagesState, PayloadAction<number>> = (sta
     state.editChatroomName = action.payload
 };
 
-const editChatroomName: CaseReducer<MessagesState, PayloadAction<{chatroomId: number, chatroomName: string}>> = (state, action) => {
-    for (let chatroom of state.chatroomList!){
+const editChatroomName: CaseReducer<MessagesState, PayloadAction<{ chatroomId: number, chatroomName: string }>> = (state, action) => {
+    for (let chatroom of state.chatroomList!) {
         if (chatroom.chatroomId === action.payload.chatroomId) {
             chatroom.chatroomName = action.payload.chatroomName
         }
@@ -72,14 +83,14 @@ const editChatroomName: CaseReducer<MessagesState, PayloadAction<{chatroomId: nu
 };
 
 const exitChatroom: CaseReducer<MessagesState, PayloadAction<number>> = (state, action) => {
-    state.chatroomList = state.chatroomList!.filter(chatroom=> chatroom.chatroomId !== action.payload)
+    state.chatroomList = state.chatroomList!.filter(chatroom => chatroom.chatroomId !== action.payload)
 };
 
-const toggleParticipantStatus: CaseReducer<MessagesState, PayloadAction<{chatroomId: number, participantId: number, isDeleted: boolean}>> = (state, action) => {
-    for (let chatroom of state.chatroomList!){
+const toggleParticipantStatus: CaseReducer<MessagesState, PayloadAction<{ chatroomId: number, participantId: number, isDeleted: boolean }>> = (state, action) => {
+    for (let chatroom of state.chatroomList!) {
         if (chatroom.chatroomId === action.payload.chatroomId) {
-            for (let participant of chatroom.participants){
-                if (participant.participantId === action.payload.participantId){
+            for (let participant of chatroom.participants) {
+                if (participant.participantId === action.payload.participantId) {
                     participant.isDeleted = false
                     return
                 }
@@ -88,10 +99,10 @@ const toggleParticipantStatus: CaseReducer<MessagesState, PayloadAction<{chatroo
     }
 };
 
-const sendMessage: CaseReducer<MessagesState, PayloadAction<{message: Message, chatroomId: number}>> = (state, action) => {
-    for (let chatroom of state.chatroomList!){
-        if(chatroom.chatroomId === action.payload.chatroomId) {
-            if (chatroom.messageList === undefined || null){
+const sendMessage: CaseReducer<MessagesState, PayloadAction<{ message: Message, chatroomId: number }>> = (state, action) => {
+    for (let chatroom of state.chatroomList!) {
+        if (chatroom.chatroomId === action.payload.chatroomId) {
+            if (chatroom.messageList === undefined || null) {
                 chatroom.messageList = [action.payload.message]
             } else {
                 chatroom.messageList.push(action.payload.message);
@@ -101,9 +112,9 @@ const sendMessage: CaseReducer<MessagesState, PayloadAction<{message: Message, c
 };
 
 const deleteMessage: CaseReducer<MessagesState, PayloadAction<number>> = (state, action) => {
-    for (let chatroom of state.chatroomList!){
-        for (let message of chatroom.messageList){
-            if( message.messageId === action.payload){
+    for (let chatroom of state.chatroomList!) {
+        for (let message of chatroom.messageList) {
+            if (message.messageId === action.payload) {
                 message.isDeleted = true
                 return
             }
@@ -111,17 +122,17 @@ const deleteMessage: CaseReducer<MessagesState, PayloadAction<number>> = (state,
     }
 };
 
-const getMessages: CaseReducer<MessagesState, PayloadAction<{messageList: MessageList, chatroomId: number}>> = (state, action) => {
-    for (let chatroom of state.chatroomList!){
-        if(chatroom.chatroomId === action.payload.chatroomId) {
+const getMessages: CaseReducer<MessagesState, PayloadAction<{ messageList: MessageList, chatroomId: number }>> = (state, action) => {
+    for (let chatroom of state.chatroomList!) {
+        if (chatroom.chatroomId === action.payload.chatroomId) {
             chatroom.messageList = action.payload.messageList
         }
     }
 };
 
-const setMessageColor: CaseReducer<MessagesState, PayloadAction<{chatroomId: number, color: string}>> = (state, action) => {
-    for (let chatroom of state.chatroomList!){
-        if(chatroom.chatroomId === action.payload.chatroomId) {
+const setMessageColor: CaseReducer<MessagesState, PayloadAction<{ chatroomId: number, color: string }>> = (state, action) => {
+    for (let chatroom of state.chatroomList!) {
+        if (chatroom.chatroomId === action.payload.chatroomId) {
             chatroom.myMessageColor = action.payload.color
             return
         }
@@ -134,6 +145,7 @@ const messagesSlice = createSlice({
     reducers: {
         getChatroomList,
         createChatroom,
+        addMember,
         setSelectedChatroom,
         editChatroomMode,
         editChatroomName,
@@ -150,6 +162,7 @@ const messagesSlice = createSlice({
 export const {
     getChatroomList: getChatroomListAction,
     createChatroom: createChatroomAction,
+    addMember: addMemberAction,
     setSelectedChatroom: setSelectedChatroomAction,
     editChatroomMode: editChatroomModeAction,
     editChatroomName: editChatroomNameAction,

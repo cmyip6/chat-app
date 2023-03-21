@@ -2,10 +2,44 @@ import { showNotification } from '@mantine/notifications';
 import { Dispatch } from '@reduxjs/toolkit';
 import { getState, socket } from '../../store';
 import { MakeRequest } from '../../utils/requestUtils';
-import { ChatroomList, createChatroomAction, deleteMessageAction, editChatroomNameAction, exitChatroomAction, getChatroomListAction, getMessagesAction, MessageList, sendMessageAction, setSelectedChatroomAction } from './slice';
+import { addMemberAction, ChatroomList, createChatroomAction, deleteMessageAction, editChatroomNameAction, exitChatroomAction, getChatroomListAction, getMessagesAction, MessageList, sendMessageAction, setSelectedChatroomAction } from './slice';
 
 const makeRequest = (token: string) => new MakeRequest(token);
 
+export function addMember(nameList: string[], chatroomId: number) {
+    return async (dispatch: Dispatch) => {
+        const token = getState().auth.token;
+
+        const result = await makeRequest(token!).put<
+            {
+                nameList: string[];
+                chatroomId: number;
+            },
+            {
+                success: boolean;
+                participantList: {
+                    participantId: number
+                    participantNickname?: string
+                    participantName: string,
+                    participationId: number,
+                    isDeleted: boolean
+                }[]
+
+                msg: string;
+            }
+        >(`/messages/`, {
+            nameList,
+            chatroomId,
+        });
+
+        if (result.success) {
+
+            socket.emit('addMember', { participantList: result.participantList, chatroomId });
+
+            dispatch(addMemberAction({chatroomId, participantList: result.participantList}));
+        }
+    };
+}
 
 export function createChatroom(nameList: string[], chatroomName?: string) {
     return async (dispatch: Dispatch) => {
@@ -39,10 +73,10 @@ export function createChatroom(nameList: string[], chatroomName?: string) {
             chatroomName,
         });
 
-        if (result.msg==='Chatroom Existed') {
+        if (result.msg === 'Chatroom Existed') {
             dispatch(setSelectedChatroomAction(result.chatroomId!))
-            socket.emit('toggleParticipantStatus', {chatroomId: result.chatroomId, participantId: owner, isDeleted: false}); 
-            
+            socket.emit('toggleParticipantStatus', { chatroomId: result.chatroomId, participantId: owner, isDeleted: false });
+
         } else if (result.success) {
             const payload = {
                 chatroomId: result.chatroomId!,
@@ -57,7 +91,7 @@ export function createChatroom(nameList: string[], chatroomName?: string) {
             dispatch(setSelectedChatroomAction(result.chatroomId!))
 
             socket.emit('createChatroom', payload)
-        } 
+        }
     };
 }
 
@@ -80,7 +114,7 @@ export function deleteMessage(messageId: number, userId: number) {
                     created_at: string
                     sender_username: string
                 }
-                
+
                 msg: string;
             }
         >(`/messages/`, {
@@ -89,10 +123,10 @@ export function deleteMessage(messageId: number, userId: number) {
         });
 
         if (result.success) {
-            socket.emit('deleteMessage', {messageId, chatroomId}); 
+            socket.emit('deleteMessage', { messageId, chatroomId });
 
             dispatch(deleteMessageAction(messageId));
-        } 
+        }
     };
 }
 
@@ -115,7 +149,7 @@ export function sendMessage(userId: number, selectedChatroom: number, text: stri
                     created_at: string
                     sender_username: string
                 }
-                
+
                 msg: string;
             }
         >(`/messages/`, {
@@ -125,7 +159,7 @@ export function sendMessage(userId: number, selectedChatroom: number, text: stri
         });
 
         if (result.success) {
-            socket.emit('sendMessage', selectedChatroom); 
+            socket.emit('sendMessage', selectedChatroom);
 
             console.log(result)
             const payload = {
@@ -138,8 +172,8 @@ export function sendMessage(userId: number, selectedChatroom: number, text: stri
                 createdAt: result.data.created_at
             }
 
-            dispatch(sendMessageAction({message: payload, chatroomId: selectedChatroom}));
-        } 
+            dispatch(sendMessageAction({ message: payload, chatroomId: selectedChatroom }));
+        }
     };
 }
 
@@ -155,7 +189,7 @@ export function getMessages(chatroomId: number) {
         >(`/messages/${chatroomId}`);
 
         if (result.success) {
-            dispatch(getMessagesAction({messageList: result.messageList, chatroomId}))
+            dispatch(getMessagesAction({ messageList: result.messageList, chatroomId }))
             console.log(result.msg)
         } else {
             showNotification({
@@ -179,8 +213,8 @@ export function getChatroomList(userId: number) {
 
         if (result.success) {
             dispatch(getChatroomListAction(result.chatroomList))
-            if (result.chatroomList?.length){
-                socket.emit('joinChatroom', result.chatroomList); 
+            if (result.chatroomList?.length) {
+                socket.emit('joinChatroom', result.chatroomList);
             }
         } else {
             showNotification({
@@ -205,7 +239,7 @@ export function editChatroomName(chatroomId: number, chatroomName: string) {
                 success?: boolean;
                 msg: string;
             }
-        >(`/messages/chatroom`, {chatroomId, chatroomName, userId});
+        >(`/messages/chatroom`, { chatroomId, chatroomName, userId });
 
         if (result.success) {
             const payload = {
@@ -224,7 +258,7 @@ export function editChatroomName(chatroomId: number, chatroomName: string) {
     };
 }
 
-export function exitChatroom(chatroomId: number, participantId:number) {
+export function exitChatroom(chatroomId: number, participantId: number) {
     return async (dispatch: Dispatch) => {
         const token = getState().auth.token;
         const result = await makeRequest(token!).delete<
@@ -236,14 +270,14 @@ export function exitChatroom(chatroomId: number, participantId:number) {
                 success?: boolean;
                 msg: string;
             }
-        >(`/messages/chatroom`, {chatroomId, participantId});
+        >(`/messages/chatroom`, { chatroomId, participantId });
 
         if (result.success) {
-            socket.emit('toggleParticipantStatus', {chatroomId, participantId, isDeleted: true}); 
+            socket.emit('toggleParticipantStatus', { chatroomId, participantId, isDeleted: true });
             dispatch(exitChatroomAction(chatroomId))
             const chatroomList = getState().messages.chatroomList
             chatroomList && dispatch(setSelectedChatroomAction(chatroomList[0].chatroomId))
-        } 
+        }
         showNotification({
             title: 'Exit Chatroom Notification',
             message: result.msg
