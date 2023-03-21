@@ -11,7 +11,8 @@ export default function MessageColorControl() {
     const selectedChatroom = useAppSelector(state => state.messages.selectedChatroom)
     const swatches = ['#25262b', '#868e96', '#fa5252', '#e64980', '#be4bdb', '#7950f2', '#4c6ef5', '#228be6', '#15aabf', '#12b886', '#40c057', '#82c91e', '#fab005', '#fd7e14']
 
-    const handleChangeEnd = () => {
+    const handleChangeEnd = (value: string) => {
+        setValue(value)
         if (!selectedChatroom) {
             showNotification({
                 message: 'Select a chatroom first',
@@ -30,11 +31,10 @@ export default function MessageColorControl() {
             <Title className='mb-2' order={5}>Message Control</Title>
             <Input.Wrapper label="Text Background and Opacity">
                 <ColorPicker
-                    format="rgba"
+                    format="hex"
                     value={value}
                     swatches={swatches}
-                    onChange={setValue}
-                    onChangeEnd={handleChangeEnd}
+                    onChange={handleChangeEnd}
                 />
             </Input.Wrapper>
         </Container>

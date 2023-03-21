@@ -66,6 +66,7 @@ export class MessagesService {
                 .from('messages')
                 .where('chatroom_id', chatroomId)
                 .join('users', 'users.id', 'sender')
+                .orderBy('messages.created_at', 'asc')
             return messageList;
         } catch (e) {
             throw e

@@ -46,18 +46,27 @@ export default function Messages() {
     socket.on('createChatroomResponse', (chatroom) => {
       dispatch(getChatroomList(userId))
     })
+    return ()=>{
+      socket.off('createChatroomResponse')
+    }
   }, [chatroomList])
 
   useEffect(() => {
     socket.on('sendMessageResponse', (chatroomId) => {
       dispatch(getMessages(chatroomId))
     });
+    return ()=>{
+      socket.off('sendMessageResponse')
+    }
   }, [chatroomList])
 
   useEffect(() => {
     socket.on('toggleParticipantStatusResponse', (data) => {
       dispatch(toggleParticipantStatusAction({ chatroomId: data.chatroomId, participantId: data.participantId, isDeleted: data.isDeleted }))
     });
+    return ()=>{
+      socket.off('toggleParticipantStatusResponse')
+    }
   }, [chatroomList])
 
 

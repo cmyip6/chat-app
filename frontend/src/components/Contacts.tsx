@@ -27,6 +27,9 @@ export default function Contacts() {
         dispatch(toggleOnlineAction({ username: user.username, isOnline: true }))
       }
     });
+    return ()=>{
+      socket.off('loginResponse')
+    }
 
   }, [socket, contactList])
 
@@ -38,7 +41,9 @@ export default function Contacts() {
         dispatch(toggleOnlineAction({ username: user.username, isOnline: false }))
       }
     });
-
+    return ()=>{
+      socket.off('logoutResponse')
+    }
   }, [socket, contactList])
 
   function handleDelete(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {

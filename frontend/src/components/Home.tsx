@@ -26,6 +26,10 @@ export default function Home() {
     socket.on('getOnlineUserListResponse', (contactList) => {
       dispatch(getContactsListAction(contactList))
     });
+
+    return ()=>{
+      socket.off('getOnlineUserListResponse')
+    }
   }, [contactList])
 
   return (

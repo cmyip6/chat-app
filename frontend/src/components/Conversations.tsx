@@ -46,12 +46,18 @@ export default function Conversations() {
                 return ()=> clearTimeout(timer)
             }
         })
+        return ()=>{
+            socket.off('typingResponse')
+          }
     }, [selectedChatroom])
 
     useEffect(() => {
         socket.on('deleteMessageResponse', (messageId) => {
             dispatch(deleteMessageAction(messageId))
         })
+        return ()=>{
+            socket.off('deleteMessageResponse')
+          }
     }, [messageList])
 
     useEffect(() => {
