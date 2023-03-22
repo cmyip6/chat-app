@@ -70,6 +70,46 @@ export class MessagesService {
 		}
 	}
 
+	async addParticipants(chatroomId: number, nameList: string[]) {
+		const txn = await this.knex.transaction()
+		try {
+			for (let name of nameList) {
+				const [check] = await txn('chatrooms')
+					.select('participation.id')
+					.from('chatrooms')
+					.join(
+						'participation',
+						'participation.chatroom_id',
+						'chatrooms.id'
+					)
+					.join('users', 'participation.user_id', 'users.id')
+					.where('chatrooms.id', chatroomId)
+					.where('users.username', name)
+
+				if (check) {
+					await txn('participation')
+						.update({
+							is_deleted: false
+						})
+						.where('id', check.id)
+				} else {
+					const [user] = await txn('users').where('username', name)
+
+					await txn('participation').insert({
+						user_id: user.id,
+						chatroom_id: chatroomId
+					})
+				}
+			}
+
+			await txn.commit()
+			return true
+		} catch (e) {
+			await txn.rollback()
+			throw e
+		}
+	}
+
 	async editChatroomName(
 		chatroomId: number,
 		chatroomName: string,

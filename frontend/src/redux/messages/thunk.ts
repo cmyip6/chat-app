@@ -21,42 +21,38 @@ const makeRequest = (token: string) => new MakeRequest(token)
 export function addMember(nameList: string[], chatroomId: number) {
 	return async (dispatch: Dispatch) => {
 		const token = getState().auth.token
+		const userId = getState().auth.userId!
 
 		const result = await makeRequest(token!).put<
 			{
 				nameList: string[]
 				chatroomId: number
+				userId: number
 			},
 			{
 				success: boolean
-				participantList: {
-					participantId: number
-					participantNickname?: string
-					participantName: string
-					participationId: number
-					isDeleted: boolean
-				}[]
-
+				chatroomList: ChatroomList
 				msg: string
 			}
-		>(`/messages/`, {
+		>(`/messages/chatroom/participants`, {
 			nameList,
-			chatroomId
+			chatroomId,
+			userId
 		})
 
 		if (result.success) {
-			socket.emit('addMember', {
-				participantList: result.participantList,
-				chatroomId
-			})
-
-			dispatch(
-				addMemberAction({
-					chatroomId,
-					participantList: result.participantList
-				})
+			const chatroom = result.chatroomList.find(
+				(chatroom) => chatroom.chatroomId === chatroomId
 			)
+			const participantList = chatroom?.participants!
+			dispatch(addMemberAction({ chatroomId, participantList }))
+			socket.emit('createChatroom', chatroom)
 		}
+		showNotification({
+			title: 'Update Participants Notification',
+			message: result.msg,
+			autoClose: 2000
+		})
 	}
 }
 
@@ -271,7 +267,11 @@ export function editChatroomName(chatroomId: number, chatroomName: string) {
 				success?: boolean
 				msg: string
 			}
-		>(`/messages/chatroom`, { chatroomId, chatroomName, userId })
+		>(`/messages/chatroom/chatroomName`, {
+			chatroomId,
+			chatroomName,
+			userId
+		})
 
 		if (result.success) {
 			const payload = {

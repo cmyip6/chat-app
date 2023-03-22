@@ -4,6 +4,29 @@ import { MessagesService } from '../services/messagesServices'
 export class MessagesController {
 	constructor(private messagesService: MessagesService) {}
 
+	addParticipants = async (req: Request, res: Response) => {
+		try {
+			const chatroomId = req.body.chatroomId
+			const nameList = req.body.nameList
+			const userId = req.body.userId
+
+			await this.messagesService.addParticipants(chatroomId, nameList)
+
+			const result = await this.messagesService.getChatroomList(userId)
+
+			res.json({
+				success: true,
+				chatroomList: result,
+				msg: 'Participants Updated'
+			})
+		} catch (e) {
+			console.error(e)
+			res.status(500).json({
+				msg: 'Something Went wrong during updating database'
+			})
+		}
+	}
+
 	editChatroomName = async (req: Request, res: Response) => {
 		try {
 			const chatroomId = req.body.chatroomId

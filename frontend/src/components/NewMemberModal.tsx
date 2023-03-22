@@ -23,8 +23,9 @@ export default function NewMemberModal(props: {
 	function onClick() {
 		if (value.length) {
 			dispatch(addMember(value, props.chatroomId))
-			props.onClose()
+			setValue([])
 			setSearchName('')
+			props.onClose()
 		} else {
 			showNotification({
 				title: 'Add Member Notification',
