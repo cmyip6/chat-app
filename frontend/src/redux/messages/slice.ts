@@ -15,7 +15,7 @@ type Chatroom = {
 	ownerName: string
 	isGroup: boolean
 	myMessageColor?: string
-	participants: Participant[]
+	participants: ParticipantList
 	messageList: MessageList
 }
 
@@ -31,6 +31,7 @@ type Message = {
 
 export type ChatroomList = Chatroom[]
 export type MessageList = Message[]
+export type ParticipantList = Participant[]
 
 export interface MessagesState {
 	chatroomList: ChatroomList | null

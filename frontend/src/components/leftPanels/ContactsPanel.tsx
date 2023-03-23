@@ -1,13 +1,13 @@
-import { Button, Card, Divider, Group, Input, Tooltip } from '@mantine/core'
+import { Button, Card, Divider, Group, Input } from '@mantine/core'
 import { IconPointFilled, IconSearch, IconX } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
-import { setEditModeAction, toggleOnlineAction } from '../redux/contacts/slice'
-import { deleteContact, editContactName } from '../redux/contacts/thunk'
-import { createChatroom } from '../redux/messages/thunk'
-import { socket, useAppDispatch, useAppSelector } from '../store'
-import { ConfirmationHub } from './ConfirmationHub'
+import { setEditModeAction, toggleOnlineAction } from '../../redux/contacts/slice'
+import { deleteContact, editContactName } from '../../redux/contacts/thunk'
+import { createChatroom } from '../../redux/messages/thunk'
+import { socket, useAppDispatch, useAppSelector } from '../../store'
+import { ConfirmationModal } from '../modals/ConfirmationModal'
 
-export default function Contacts() {
+export default function ContactsPanel() {
 	const dispatch = useAppDispatch()
 	const contactList = useAppSelector((state) => state.contacts.contactsList)
 	const editTarget = useAppSelector((state) => state.contacts.editTarget)
@@ -312,7 +312,7 @@ export default function Contacts() {
 							</div>
 						)
 					})}
-			<ConfirmationHub
+			<ConfirmationModal
 				isShow={opened}
 				onClose={onClose}
 				onDelete={onDelete}

@@ -6,8 +6,8 @@ import {
 } from '@mantine/core'
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
-import Home from './components/Home'
-import Login from './components/Login'
+import Home from './components/pages/Home'
+import Login from './components/pages/Login'
 import { retrieveLogin } from './redux/auth/thunk'
 import { PREFIX, useAppDispatch, useAppSelector } from './store'
 

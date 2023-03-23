@@ -1,8 +1,8 @@
 import React, { useRef, useState } from 'react'
 import { Button, Container, Form } from 'react-bootstrap'
-import { useAppDispatch } from '../store'
-import { login } from '../redux/auth/thunk'
-import SignUpModal from './SignUpModal'
+import { useAppDispatch } from '../../store'
+import { login } from '../../redux/auth/thunk'
+import SignUpModal from '../modals/SignUpModal'
 
 export default function Login() {
 	const dispatch = useAppDispatch()

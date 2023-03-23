@@ -2,8 +2,8 @@ import { Button, Input, Modal } from '@mantine/core'
 import { showNotification } from '@mantine/notifications'
 import { useRef } from 'react'
 import { Form } from 'react-bootstrap'
-import { signUp } from '../redux/auth/thunk'
-import { useAppDispatch } from '../store'
+import { signUp } from '../../redux/auth/thunk'
+import { useAppDispatch } from '../../store'
 
 type SignUpModalProps = {
 	opened: boolean

@@ -1,7 +1,7 @@
 import { Divider, useMantineTheme } from '@mantine/core'
 import { IconCaretUp, IconMenuOrder } from '@tabler/icons-react'
 import React, { useEffect, useState } from 'react'
-import { PREFIX } from '../store'
+import { PREFIX } from '../../store'
 import MessageColorControl from './MessageColorControl'
 import ThemeControl from './ThemeControl'
 

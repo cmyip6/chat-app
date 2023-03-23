@@ -2,8 +2,8 @@ import { ColorPicker, Container, Input, Title } from '@mantine/core'
 import { showNotification } from '@mantine/notifications'
 import { IconAlertCircle } from '@tabler/icons-react'
 import { useState } from 'react'
-import { setMessageColorAction } from '../redux/messages/slice'
-import { PREFIX, useAppDispatch, useAppSelector } from '../store'
+import { setMessageColorAction } from '../../redux/messages/slice'
+import { PREFIX, useAppDispatch, useAppSelector } from '../../store'
 
 export default function MessageColorControl() {
 	const dispatch = useAppDispatch()

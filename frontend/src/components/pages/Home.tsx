@@ -1,11 +1,11 @@
 import { useEffect } from 'react'
-import { getContactsListAction } from '../redux/contacts/slice'
-import { getContactList } from '../redux/contacts/thunk'
-import { getChatroomList } from '../redux/messages/thunk'
-import { socket, useAppDispatch, useAppSelector } from '../store'
-import Conversations from './Conversations'
+import { getContactsListAction } from '../../redux/contacts/slice'
+import { getContactList } from '../../redux/contacts/thunk'
+import { getChatroomList } from '../../redux/messages/thunk'
+import { socket, useAppDispatch, useAppSelector } from '../../store'
+import Conversations from '../rightPanels/Conversations'
 // import SideBar from './SideBar'
-import SidePanel from './SidePanel'
+import SidePanel from '../leftPanels/SidePanel'
 
 export default function Home() {
 	const dispatch = useAppDispatch()

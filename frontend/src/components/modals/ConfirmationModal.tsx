@@ -7,7 +7,7 @@ interface ConfirmationHubProps {
 	onClose: () => void
 }
 
-export function ConfirmationHub(props: ConfirmationHubProps) {
+export function ConfirmationModal(props: ConfirmationHubProps) {
 	return (
 		<Modal
 			centered

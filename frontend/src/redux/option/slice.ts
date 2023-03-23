@@ -3,10 +3,12 @@ import { CaseReducer, createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 export type OptionState = {
 	colorTheme: ColorScheme
+	isStreaming: boolean
 }
 
 const initialState: OptionState = {
-	colorTheme: 'light'
+	colorTheme: 'light',
+	isStreaming: false
 }
 
 const toggleColorScheme: CaseReducer<
@@ -16,15 +18,25 @@ const toggleColorScheme: CaseReducer<
 	state.colorTheme = action.payload
 }
 
+const toggleIsStreaming: CaseReducer<
+	OptionState,
+	PayloadAction<boolean>
+> = (state, action) => {
+	state.isStreaming = action.payload
+}
+
 const optionSlice = createSlice({
 	name: 'option',
 	initialState,
 	reducers: {
-		toggleColorScheme
+		toggleColorScheme,
+		toggleIsStreaming,
 	}
 })
 
-export const { toggleColorScheme: toggleColorSchemeAction } =
-	optionSlice.actions
+export const { 
+	toggleColorScheme: toggleColorSchemeAction, 
+	toggleIsStreaming: toggleIsStreamingAction,
+} = optionSlice.actions
 
 export default optionSlice.reducer

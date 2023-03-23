@@ -6,12 +6,12 @@ import {
 	IconPhoto
 } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
-import { logout } from '../redux/auth/thunk'
-import { PREFIX, useAppDispatch, useAppSelector } from '../store'
-import Contacts from './Contacts'
-import Messages from './Messages'
-import NewContactModal from './NewContactModal'
-import NewMessageModal from './NewMessageModal'
+import { logout } from '../../redux/auth/thunk'
+import { PREFIX, useAppDispatch, useAppSelector } from '../../store'
+import ContactsPanel from './ContactsPanel'
+import ChatroomPanel from './ChatroomPanel'
+import NewContactModal from '../modals/NewContactModal'
+import NewChatroomModal from '../modals/NewChatroomModal'
 
 const MESSAGES_KEY = 'messages'
 const CONTACTS_KEY = 'contacts'
@@ -114,7 +114,7 @@ export default function SidePanel() {
 					value={CONTACTS_KEY}
 					pt='xs'
 				>
-					<Contacts />
+					<ContactsPanel />
 				</Tabs.Panel>
 
 				<Tabs.Panel
@@ -122,7 +122,7 @@ export default function SidePanel() {
 					value={MESSAGES_KEY}
 					pt='xs'
 				>
-					<Messages />
+					<ChatroomPanel />
 				</Tabs.Panel>
 			</Tabs>
 			<div className='text-muted small'>Username: {username}</div>
@@ -147,7 +147,7 @@ export default function SidePanel() {
 				title={'New ' + activeTab}
 			>
 				{messageOpened ? (
-					<NewMessageModal onClose={closeModal} />
+					<NewChatroomModal onClose={closeModal} />
 				) : (
 					<NewContactModal onClose={closeModal} />
 				)}

@@ -1,13 +1,13 @@
-import { Input, Tooltip, Loader, Button, Group } from '@mantine/core'
+import { Input, Tooltip, Loader, Button } from '@mantine/core'
 import { IconAlertCircle, IconChecks } from '@tabler/icons-react'
-import { useAppDispatch, useAppSelector } from '../store'
+import { useAppDispatch, useAppSelector } from '../../store'
 import { FormEvent, useRef, useState } from 'react'
 import { showNotification } from '@mantine/notifications'
-import { checkUsername, createContact } from '../redux/contacts/thunk'
+import { checkUsername, createContact } from '../../redux/contacts/thunk'
 import {
 	checkUsernameAction,
 	setTargetUserAction
-} from '../redux/contacts/slice'
+} from '../../redux/contacts/slice'
 
 type ModalProps = {
 	onClose: () => void

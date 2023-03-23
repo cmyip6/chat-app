@@ -1,23 +1,23 @@
 import { Badge, Card, Input, Tooltip, useMantineTheme } from '@mantine/core'
 import { IconCheck, IconSearch, IconUserPlus, IconX } from '@tabler/icons-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
 	editChatroomModeAction,
 	setMessageColorAction,
 	setSelectedChatroomAction,
 	toggleParticipantStatusAction
-} from '../redux/messages/slice'
+} from '../../redux/messages/slice'
 import {
 	editChatroomName,
 	exitChatroom,
 	getChatroomList,
 	getMessages
-} from '../redux/messages/thunk'
-import { PREFIX, socket, useAppDispatch, useAppSelector } from '../store'
-import { ConfirmationHub } from './ConfirmationHub'
-import NewMemberModal from './NewMemberModal'
+} from '../../redux/messages/thunk'
+import { PREFIX, socket, useAppDispatch, useAppSelector } from '../../store'
+import { ConfirmationModal } from '../modals/ConfirmationModal'
+import NewMemberModal from '../modals/NewMemberModal'
 
-export default function Messages() {
+export default function ChatroomPanel() {
 	const dispatch = useAppDispatch()
 	const chatroomList = useAppSelector((state) => state.messages.chatroomList)
 	const userId = useAppSelector((state) => state.auth.userId)
@@ -386,7 +386,7 @@ export default function Messages() {
 						</Tooltip>
 					))}
 			</div>
-			<ConfirmationHub
+			<ConfirmationModal
 				isShow={opened}
 				onClose={onClose}
 				onDelete={onDelete}

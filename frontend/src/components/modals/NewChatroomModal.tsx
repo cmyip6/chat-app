@@ -1,14 +1,14 @@
 import { Button, Checkbox, Input } from '@mantine/core'
 import { showNotification } from '@mantine/notifications'
 import { useEffect, useRef, useState } from 'react'
-import { createChatroom } from '../redux/messages/thunk'
-import { useAppDispatch, useAppSelector } from '../store'
+import { createChatroom } from '../../redux/messages/thunk'
+import { useAppDispatch, useAppSelector } from '../../store'
 
 type ModalProps = {
 	onClose: () => void
 }
 
-export default function NewMessageModal(props: ModalProps) {
+export default function NewChatroomModal(props: ModalProps) {
 	const dispatch = useAppDispatch()
 	const contactList = useAppSelector((state) => state.contacts.contactsList)
 	const [value, setValue] = useState<string[]>([])

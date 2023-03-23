@@ -1,8 +1,8 @@
 import { Button, Checkbox, Input, Modal } from '@mantine/core'
 import { showNotification } from '@mantine/notifications'
 import { useState } from 'react'
-import { addMember } from '../redux/messages/thunk'
-import { useAppDispatch, useAppSelector } from '../store'
+import { addMember } from '../../redux/messages/thunk'
+import { useAppDispatch, useAppSelector } from '../../store'
 
 export default function NewMemberModal(props: {
 	isShow: boolean

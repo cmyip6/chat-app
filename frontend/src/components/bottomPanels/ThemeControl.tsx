@@ -12,7 +12,7 @@ import {
 } from '@mantine/core'
 import { IconMoon, IconSun } from '@tabler/icons-react'
 import { useEffect, useMemo } from 'react'
-import { PREFIX } from '../store'
+import { PREFIX } from '../../store'
 
 export default function ThemeControl() {
 	const savedColor = window.localStorage.getItem(`${PREFIX}themeColor`)
