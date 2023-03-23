@@ -4,7 +4,7 @@ import {
 	MantineProvider,
 	MantineThemeOverride
 } from '@mantine/core'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import Home from './components/Home'
 import Login from './components/Login'
@@ -26,11 +26,13 @@ function App() {
 		}
 	}, [])
 
-	const myTheme: MantineThemeOverride = {
-		colorScheme: colorScheme,
-		primaryColor: 'orange',
-		defaultRadius: 0
-	}
+	const myTheme: MantineThemeOverride = useMemo(() => {
+		return {
+			colorScheme: colorScheme,
+			primaryColor: 'orange',
+			defaultRadius: 0
+		}
+	}, [colorScheme])
 
 	return (
 		<ColorSchemeProvider

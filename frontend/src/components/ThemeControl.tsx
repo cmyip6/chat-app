@@ -11,16 +11,18 @@ import {
 	useMantineTheme
 } from '@mantine/core'
 import { IconMoon, IconSun } from '@tabler/icons-react'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { PREFIX } from '../store'
 
 export default function ThemeControl() {
 	const savedColor = window.localStorage.getItem(`${PREFIX}themeColor`)
 	const { colorScheme, toggleColorScheme } = useMantineColorScheme()
 	const theme = useMantineTheme()
-	const swatches = Object.keys(theme.colors).map((color) => (
-		<ColorSwatch key={color} color={theme.colors[color][6]} />
-	))
+	const swatches = useMemo(() => {
+		return Object.keys(theme.colors).map((color) => (
+			<ColorSwatch key={color} color={theme.colors[color][6]} />
+		))
+	}, [theme.colors])
 
 	useEffect(() => {
 		savedColor && toggleColorScheme(savedColor as ColorScheme)

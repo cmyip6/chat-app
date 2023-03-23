@@ -1,6 +1,6 @@
 import { Badge, Card, Input, Tooltip, useMantineTheme } from '@mantine/core'
 import { IconCheck, IconSearch, IconUserPlus, IconX } from '@tabler/icons-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
 	editChatroomModeAction,
 	setMessageColorAction,
@@ -73,8 +73,9 @@ export default function Messages() {
 		return () => {
 			dispatch(editChatroomModeAction(0))
 			setEditName('')
+			setSearch('')
 		}
-	}, [dispatch, selected])
+	}, [])
 
 	useEffect(() => {
 		if (!userId) return
@@ -243,7 +244,7 @@ export default function Messages() {
 											}
 											rightSection={
 												editMode ===
-												chatroom.chatroomId ? (
+													chatroom.chatroomId ? (
 													<IconCheck
 														size={14}
 														onClick={() =>
@@ -258,7 +259,7 @@ export default function Messages() {
 											}
 										>
 											{editMode ===
-											chatroom.chatroomId ? (
+												chatroom.chatroomId ? (
 												<Input
 													autoFocus
 													onBlur={() =>
@@ -291,30 +292,30 @@ export default function Messages() {
 									<span>
 										{chatroom.isGroup
 											? chatroom.participants
-													.filter(
-														(participant) =>
-															participant.isDeleted ===
-															false
-													)
-													.map(
-														(participant) =>
-															participant.participantNickname ||
-															participant.participantName
-													)
-													.map((name) =>
-														name === username
-															? 'You'
-															: name
-													)
-													.sort()
-													.join(', ')
-											: chatroom.participants.map(
+												.filter(
 													(participant) =>
-														participant.participantId !==
-															userId &&
-														(participant.participantNickname ||
-															participant.participantName)
-											  )}
+														participant.isDeleted ===
+														false
+												)
+												.map(
+													(participant) =>
+														participant.participantNickname ||
+														participant.participantName
+												)
+												.map((name) =>
+													name === username
+														? 'You'
+														: name
+												)
+												.sort()
+												.join(', ')
+											: chatroom.participants.map(
+												(participant) =>
+													participant.participantId !==
+													userId &&
+													(participant.participantNickname ||
+														participant.participantName)
+											)}
 										{chatroom.isGroup && (
 											<Badge
 												style={{
@@ -358,7 +359,7 @@ export default function Messages() {
 											<IconX
 												color={
 													selected ===
-													chatroom.chatroomId
+														chatroom.chatroomId
 														? 'white'
 														: undefined
 												}

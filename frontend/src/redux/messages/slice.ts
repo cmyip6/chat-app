@@ -177,7 +177,7 @@ const setMessageColor: CaseReducer<
 	for (let chatroom of state.chatroomList!) {
 		if (chatroom.chatroomId === action.payload.chatroomId) {
 			chatroom.myMessageColor = action.payload.color
-			return
+			break
 		}
 	}
 }

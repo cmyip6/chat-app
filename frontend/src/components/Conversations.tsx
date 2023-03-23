@@ -44,7 +44,6 @@ export default function Conversations() {
 		) || []
 	const contactList = useAppSelector((state) => state.contacts.contactsList)
 	const lastMessageRef = useRef<HTMLInputElement>(null)
-	const messageBox = document.getElementById('content-container')
 	const [typing, setTyping] = useState('')
 	const [roomId, setRoomId] = useState(0)
 	const [opened, setOpened] = useState(false)
@@ -304,7 +303,7 @@ export default function Conversations() {
 						})}
 				</div>
 			</div>
-			<p
+			<div
 				className='m-2 text-muted small d-flex'
 				style={{
 					width: '100%',
@@ -312,13 +311,13 @@ export default function Conversations() {
 					justifyContent: 'space-between'
 				}}
 			>
-				<div>
+				<p>
 					{roomId === selectedChatroom && typing && (
 						<>
 							{typing} <Loader variant='dots' />
 						</>
 					)}
-				</div>
+				</p>
 
 				<Tooltip label='Scroll to bottom'>
 					<Button
@@ -338,7 +337,7 @@ export default function Conversations() {
 						<IconArrowBigDownLines size={20} />
 					</Button>
 				</Tooltip>
-			</p>
+			</div>
 			<Form onSubmit={handleSubmit}>
 				<Form.Group className='m-2' style={{ position: 'relative' }}>
 					<InputGroup>

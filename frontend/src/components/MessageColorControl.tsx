@@ -1,7 +1,7 @@
 import { ColorPicker, Container, Input, Title } from '@mantine/core'
 import { showNotification } from '@mantine/notifications'
 import { IconAlertCircle } from '@tabler/icons-react'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { setMessageColorAction } from '../redux/messages/slice'
 import { PREFIX, useAppDispatch, useAppSelector } from '../store'
 
@@ -11,6 +11,7 @@ export default function MessageColorControl() {
 	const selectedChatroom = useAppSelector(
 		(state) => state.messages.selectedChatroom
 	)
+
 	const swatches = [
 		'#25262b',
 		'#868e96',

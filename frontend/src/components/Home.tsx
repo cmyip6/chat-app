@@ -1,5 +1,4 @@
-import { Loader } from '@mantine/core'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { getContactsListAction } from '../redux/contacts/slice'
 import { getContactList } from '../redux/contacts/thunk'
 import { getChatroomList } from '../redux/messages/thunk'
@@ -19,7 +18,7 @@ export default function Home() {
 			dispatch(getContactList(userId))
 			dispatch(getChatroomList(userId))
 		}
-	}, [login])
+	}, [login, userId])
 
 	useEffect(() => {
 		if (contactList === null) return
