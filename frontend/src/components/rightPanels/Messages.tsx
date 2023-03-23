@@ -14,7 +14,7 @@ import { deleteMessage, getChatroomList } from '../../redux/messages/thunk'
 import { socket, useAppDispatch, useAppSelector } from '../../store'
 import { ConfirmationModal } from '../modals/ConfirmationModal'
 
-export default function Messages() {
+export default function Messages(props: { scroll: boolean }) {
     const dispatch = useAppDispatch()
     const theme = useMantineTheme()
     const [opened, setOpened] = useState(false)
@@ -37,6 +37,15 @@ export default function Messages() {
         ) || []
     const lastMessageRef = useRef<HTMLInputElement>(null)
 
+    useEffect(() => {
+        lastMessageRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }, [props.scroll])
+    
+    useEffect(() => {
+        if (lastMessageRef.current) {
+            lastMessageRef.current.scrollIntoView()
+        }
+    }, [messageList])
 
     useEffect(() => {
         socket.on('deleteMessageResponse', (messageId) => {
@@ -44,12 +53,6 @@ export default function Messages() {
         })
         return () => {
             socket.off('deleteMessageResponse')
-        }
-    }, [messageList])
-
-    useEffect(() => {
-        if (lastMessageRef.current) {
-            lastMessageRef.current.scrollIntoView()
         }
     }, [messageList])
 
@@ -79,7 +82,6 @@ export default function Messages() {
         dispatch(deleteMessage(deleteTarget, userId))
         onClose()
     }
-
 
     return (
         <div

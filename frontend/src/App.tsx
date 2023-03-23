@@ -4,6 +4,7 @@ import {
 	MantineProvider,
 	MantineThemeOverride
 } from '@mantine/core'
+import { Notifications } from '@mantine/notifications'
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import Home from './components/pages/Home'
@@ -14,6 +15,7 @@ import { PREFIX, useAppDispatch, useAppSelector } from './store'
 function App() {
 	const dispatch = useAppDispatch()
 	const login = useAppSelector((state) => state.auth.isLoggedIn)
+	const position = useAppSelector((state) => state.option.notificationPosition)
 
 	const token = localStorage.getItem(`${PREFIX}token`)
 	const [colorScheme, setColorScheme] = useState<ColorScheme>('light')
@@ -41,6 +43,7 @@ function App() {
 		>
 			<MantineProvider withNormalizeCSS withGlobalStyles theme={myTheme}>
 				{!login ? <Login /> : <Home />}
+				<Notifications position={position} />
 			</MantineProvider>
 		</ColorSchemeProvider>
 	)

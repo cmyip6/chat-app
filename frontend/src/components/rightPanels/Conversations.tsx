@@ -3,40 +3,47 @@ import {
 	Loader,
 	Tooltip,
 } from '@mantine/core'
-import { IconArrowBigDownLines, IconSend, IconVideo } from '@tabler/icons-react'
+import { IconArrowBigDownLines, IconDots, IconSend, IconVideo } from '@tabler/icons-react'
 import React, { useEffect, useRef, useState } from 'react'
 import { Form, InputGroup } from 'react-bootstrap'
 import { deleteMessageAction } from '../../redux/messages/slice'
 import { getChatroomList, sendMessage } from '../../redux/messages/thunk'
-import { toggleIsStreamingAction } from '../../redux/option/slice'
+import { setNotificationPositionAction, toggleIsStreamingAction } from '../../redux/option/slice'
 import { socket, useAppDispatch, useAppSelector } from '../../store'
 import Messages from './Messages'
 import OptionPanel from '../bottomPanels/OptionPanel'
 import Streaming from './Streaming'
+import { showNotification } from '@mantine/notifications'
 
 export default function Conversations() {
 	const [text, setText] = useState('')
 	const dispatch = useAppDispatch()
 	const userId = useAppSelector((state) => state.auth.userId)!
 	const username = useAppSelector((state) => state.auth.username)!
+	const isStreaming = useAppSelector((state) => state.option.isStreaming)
 	const selectedChatroom = useAppSelector(
 		(state) => state.messages.selectedChatroom
 	)!
 	const chatroomList = useAppSelector((state) => state.messages.chatroomList)
 	const contactList = useAppSelector((state) => state.contacts.contactsList)
-	const isStreaming = useAppSelector((state) => state.option.isStreaming)
 	const [messageList] =
 		chatroomList?.filter(
 			(chatroom) => chatroom.chatroomId === selectedChatroom
 		) || []
-	const lastMessageRef = useRef<HTMLInputElement>(null)
 	const [typing, setTyping] = useState('')
 	const [roomId, setRoomId] = useState(0)
+	const [scroll, setScroll] = useState(false)
+
+	useEffect(()=>{
+		return ()=>{
+			dispatch(setNotificationPositionAction('bottom-right'))
+			dispatch(toggleIsStreamingAction(false))
+		}
+	},[])
 
 	useEffect(() => {
 		if (contactList === null) return
 		socket.on('typingResponse', (data) => {
-			console.log(data.selectedChatroom, selectedChatroom)
 			if (parseInt(data.selectedChatroom) !== selectedChatroom) {
 				return
 			} else if (data.username === username) {
@@ -69,18 +76,6 @@ export default function Conversations() {
 		}
 	}, [messageList])
 
-	useEffect(() => {
-		if (lastMessageRef.current) {
-			lastMessageRef.current.scrollIntoView()
-		}
-	}, [messageList])
-
-	useEffect(() => {
-		if (selectedChatroom) {
-			dispatch(getChatroomList(userId))
-		}
-	}, [selectedChatroom])
-
 	function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault()
 		dispatch(sendMessage(userId, selectedChatroom, text))
@@ -98,12 +93,24 @@ export default function Conversations() {
 	}
 
 	function toggleStreaming(){
-		dispatch(toggleIsStreamingAction(!isStreaming))
+		if (!selectedChatroom) {
+			dispatch(setNotificationPositionAction('top-center'))
+			showNotification({
+				title: 'We notify you that',
+				message: 'You should select a chat before starting a video call',
+				color: 'red',
+				icon: <IconDots />,
+				variant: 'outline',
+			})
+		} else {
+			dispatch(toggleIsStreamingAction(!isStreaming))
+			dispatch(setNotificationPositionAction('bottom-right'))
+		}
 	}
 
 	return (
 		<div className='d-flex flex-column flex-grow-1 overflow-hidden'>
-			{isStreaming ? <Streaming/> :  <Messages/> } 
+			{isStreaming ? <Streaming/> :  <Messages scroll={scroll} /> } 
 			<div
 				className='m-2 text-muted small d-flex'
 				style={{
@@ -139,12 +146,8 @@ export default function Conversations() {
 								padding: '0px',
 								marginRight: '30px'
 							}}
-							onClick={() => {
-								lastMessageRef.current &&
-									lastMessageRef.current.scrollIntoView({
-										behavior: 'smooth'
-									})
-							}}
+							onMouseDown={()=>setScroll(true)}
+							onMouseUp={()=>setScroll(false)}
 						>
 							<IconArrowBigDownLines size={20} />
 						</Button>

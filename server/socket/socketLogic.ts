@@ -19,6 +19,15 @@ export type ContactsList = Contacts[]
 let userList: User[] = []
 
 export const socketLogic = (socket: Socket) => {
+
+	socket.on('callUser', ({chatroomId, signalData, initiator, name})=> {
+		io.to(`chatroom-${chatroomId}`).emit('callUserResponse', {signal: signalData, initiator, name})
+	})
+
+	socket.on('answerCall', (data)=>{
+		io.to(`user-${data.to}`).emit('callAccepted', data.signal)
+	})
+
 	socket.on('getOnlineUserList', ({ socketId, contactsList }) => {
 		if (userList?.length && contactsList?.length) {
 			for (let contact of contactsList) {
