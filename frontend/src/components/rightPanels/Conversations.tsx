@@ -4,16 +4,17 @@ import {
 	Tooltip,
 } from '@mantine/core'
 import { IconArrowBigDownLines, IconDots, IconSend, IconVideo } from '@tabler/icons-react'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Form, InputGroup } from 'react-bootstrap'
 import { deleteMessageAction } from '../../redux/messages/slice'
-import { getChatroomList, sendMessage } from '../../redux/messages/thunk'
+import { sendMessage } from '../../redux/messages/thunk'
 import { setNotificationPositionAction, toggleIsStreamingAction } from '../../redux/option/slice'
 import { socket, useAppDispatch, useAppSelector } from '../../store'
 import Messages from './Messages'
 import OptionPanel from '../bottomPanels/OptionPanel'
 import Streaming from './Streaming'
 import { showNotification } from '@mantine/notifications'
+import { ConfirmationModal } from '../modals/ConfirmationModal'
 
 export default function Conversations() {
 	const [text, setText] = useState('')
@@ -33,13 +34,14 @@ export default function Conversations() {
 	const [typing, setTyping] = useState('')
 	const [roomId, setRoomId] = useState(0)
 	const [scroll, setScroll] = useState(false)
+	const [opened, setOpened] = useState(false)
 
-	useEffect(()=>{
-		return ()=>{
-			dispatch(setNotificationPositionAction('bottom-right'))
+
+	useEffect(() => {
+		return () => {
 			dispatch(toggleIsStreamingAction(false))
 		}
-	},[])
+	}, [])
 
 	useEffect(() => {
 		if (contactList === null) return
@@ -92,7 +94,7 @@ export default function Conversations() {
 		}
 	}
 
-	function toggleStreaming(){
+	function toggleStreaming() {
 		if (!selectedChatroom) {
 			dispatch(setNotificationPositionAction('top-center'))
 			showNotification({
@@ -101,16 +103,23 @@ export default function Conversations() {
 				color: 'red',
 				icon: <IconDots />,
 				variant: 'outline',
+				onClose: () => dispatch(setNotificationPositionAction('bottom-right'))
 			})
+		} else if(isStreaming) {
+			setOpened(true)
 		} else {
 			dispatch(toggleIsStreamingAction(!isStreaming))
-			dispatch(setNotificationPositionAction('bottom-right'))
 		}
+	}
+
+	function onConfirmDelete(){
+		dispatch(toggleIsStreamingAction(false))
+		setOpened(false)
 	}
 
 	return (
 		<div className='d-flex flex-column flex-grow-1 overflow-hidden'>
-			{isStreaming ? <Streaming/> :  <Messages scroll={scroll} /> } 
+			{isStreaming ? <Streaming /> : <Messages scroll={scroll} scrollEnd={()=>setScroll(false)}/>}
 			<div
 				className='m-2 text-muted small d-flex'
 				style={{
@@ -126,56 +135,68 @@ export default function Conversations() {
 						</>
 					)}
 				</p>
-				<div className='d-flex justify-content-center align-items-center' style={{gap: '20px'}}>
-					<Tooltip label='Start Video Call'>
-						<Button 
-							variant={isStreaming? 'filled' : 'outline'} 
-							style={{padding: '0px', width:'40px', height:'40px'}} 
+				<div className='d-flex justify-content-center align-items-center' style={{ gap: '20px' }}>
+					<Tooltip label={isStreaming? 'End Video Call':'Start Video Call'} >
+						<Button
+							variant={isStreaming ? 'filled' : 'outline'}
+							style={{ padding: '0px', width: '40px', height: '40px', margin: isStreaming ? '30px' : '0px' }}
 							radius={50}
 							onClick={toggleStreaming}
-							>
-								<IconVideo />
+						>
+							<IconVideo />
 						</Button>
 					</Tooltip>
 
-					<Tooltip label='Scroll to bottom'>
-						<Button
-							variant='subtle'
-							style={{
-								height: 'fit-content',
-								padding: '0px',
-								marginRight: '30px'
-							}}
-							onMouseDown={()=>setScroll(true)}
-							onMouseUp={()=>setScroll(false)}
-						>
-							<IconArrowBigDownLines size={20} />
-						</Button>
-					</Tooltip>
+					{
+						!isStreaming &&
+						<Tooltip label='Scroll to bottom'>
+							<Button
+								variant='subtle'
+								style={{
+									height: 'fit-content',
+									padding: '0px',
+									marginRight: '30px'
+								}}
+								onClick={() => setScroll(true)}
+							>
+								<IconArrowBigDownLines size={20} />
+							</Button>
+						</Tooltip>
+					}
 				</div>
 			</div>
-			<Form onSubmit={handleSubmit}>
-				<Form.Group className='m-2' style={{ position: 'relative' }}>
-					<InputGroup>
-						<Form.Control
-							as='textarea'
-							rows={1}
-							autoFocus
-							required
-							value={text}
-							aria-describedby='basic-addon2'
-							onKeyDown={handleTyping}
-							onChange={(e) => setText(e.currentTarget.value)}
-							style={{ resize: 'none' }}
-						/>
-						<Button radius='sm' type='submit'>
-							<IconSend size={14} />
-						</Button>
-					</InputGroup>
-				</Form.Group>
-			</Form>
-			
-			<OptionPanel />
+			{
+				!isStreaming &&
+				<>
+					<Form onSubmit={handleSubmit}>
+						<Form.Group className='m-2' style={{ position: 'relative' }}>
+							<InputGroup>
+								<Form.Control
+									as='textarea'
+									rows={1}
+									autoFocus
+									required
+									value={text}
+									aria-describedby='basic-addon2'
+									onKeyDown={handleTyping}
+									onChange={(e) => setText(e.currentTarget.value)}
+									style={{ resize: 'none' }}
+								/>
+								<Button radius='sm' type='submit'>
+									<IconSend size={14} />
+								</Button>
+							</InputGroup>
+						</Form.Group>
+					</Form>
+					<OptionPanel />
+				</>
+			}
+			<ConfirmationModal 
+				onClose={()=>setOpened(false)} 
+				onDelete={onConfirmDelete} 
+				isShow={opened}
+				message='Action will disconnect streaming, are you sure?'
+				/>
 		</div>
 	)
 }

@@ -1,5 +1,6 @@
 import { Button, Modal, Tabs } from '@mantine/core'
 import {
+	IconAlertCircle,
 	IconCaretRight,
 	IconMenuOrder,
 	IconMessageCircle,
@@ -12,6 +13,8 @@ import ContactsPanel from './ContactsPanel'
 import ChatroomPanel from './ChatroomPanel'
 import NewContactModal from '../modals/NewContactModal'
 import NewChatroomModal from '../modals/NewChatroomModal'
+import { hideNotification, showNotification } from '@mantine/notifications'
+import { setNotificationPositionAction } from '../../redux/option/slice'
 
 const MESSAGES_KEY = 'messages'
 const CONTACTS_KEY = 'contacts'
@@ -22,6 +25,7 @@ export default function SidePanel() {
 	const [opened, setOpened] = useState<boolean>(false)
 
 	const messageOpened = MESSAGES_KEY === activeTab
+	const isStreaming = useAppSelector(state => state.option.isStreaming)
 	const username = useAppSelector((state) => state.auth.username)
 	const savedSize = window.localStorage.getItem(`${PREFIX}contactWidth`)
 	const [size, setSize] = useState((savedSize && parseInt(savedSize)) || 250)
@@ -57,6 +61,26 @@ export default function SidePanel() {
 
 	const closeModal = () => {
 		setOpened(false)
+	}
+
+	const logoutHandler = () => {
+		if(isStreaming){
+			dispatch(setNotificationPositionAction('bottom-left'))
+			showNotification({
+				id: 'logout',
+				title: 'Logout Warning',
+				message: 'Continue logout will stop you streaming, click ! to proceed or close this box to cancel',
+				icon: <IconAlertCircle onClick={()=>{
+					dispatch(logout())
+					hideNotification('logout')
+				}}/>,
+				color: 'red',
+				autoClose: 5000,
+				onClose: ()=>dispatch(setNotificationPositionAction('bottom-right'))
+			})
+		} else {
+			dispatch(logout())
+		}
 	}
 
 	return (
@@ -126,7 +150,10 @@ export default function SidePanel() {
 				</Tabs.Panel>
 			</Tabs>
 			<div className='text-muted small'>Username: {username}</div>
-			<Button className='rounded-0' onClick={() => setOpened(true)}>
+			<Button className='rounded-0' onClick={() => {
+				if(isStreaming) return
+				setOpened(true)
+				}}>
 				NEW{' '}
 				{messageOpened
 					? MESSAGES_KEY.toUpperCase()
@@ -135,7 +162,7 @@ export default function SidePanel() {
 			<Button
 				className='rounded-0'
 				variant='outline'
-				onClick={() => dispatch(logout())}
+				onClick={logoutHandler}
 			>
 				LOGOUT
 			</Button>

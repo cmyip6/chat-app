@@ -14,7 +14,7 @@ import { deleteMessage, getChatroomList } from '../../redux/messages/thunk'
 import { socket, useAppDispatch, useAppSelector } from '../../store'
 import { ConfirmationModal } from '../modals/ConfirmationModal'
 
-export default function Messages(props: { scroll: boolean }) {
+export default function Messages(props: { scroll: boolean, scrollEnd: () => void }) {
     const dispatch = useAppDispatch()
     const theme = useMantineTheme()
     const [opened, setOpened] = useState(false)
@@ -39,6 +39,7 @@ export default function Messages(props: { scroll: boolean }) {
 
     useEffect(() => {
         lastMessageRef.current?.scrollIntoView({ behavior: 'smooth' })
+        props.scrollEnd()
     }, [props.scroll])
     
     useEffect(() => {

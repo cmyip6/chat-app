@@ -24,6 +24,7 @@ export default function ChatroomPanel() {
 	const username = useAppSelector((state) => state.auth.username)
 	const selected = useAppSelector((state) => state.messages.selectedChatroom)
 	const editMode = useAppSelector((state) => state.messages.editChatroomName)
+	const isStreaming = useAppSelector((state) => state.option.isStreaming)
 	const [editName, setEditName] = useState('')
 	const [search, setSearch] = useState('')
 	const [opened, setOpened] = useState(false)
@@ -124,6 +125,7 @@ export default function ChatroomPanel() {
 	}
 
 	function handleEdit(chatroomId: number, chatroomName?: string) {
+		if(isStreaming) return
 		dispatch(editChatroomModeAction(chatroomId))
 		setEditName(chatroomName || '')
 	}
@@ -135,6 +137,7 @@ export default function ChatroomPanel() {
 	}
 
 	function handleDelete(chatroomId: number) {
+		if(isStreaming) return
 		setDeleteTarget(chatroomId)
 		setOpened(true)
 	}
@@ -152,12 +155,13 @@ export default function ChatroomPanel() {
 	}
 
 	function onDelete() {
-		if (!userId) return
+		if (!userId || isStreaming) return
 		dispatch(exitChatroom(deleteTarget, userId))
 		onClose()
 	}
 
 	function inviteNewMemberHandler(chatroomId: number) {
+		if(isStreaming) return
 		setTargetChatroomId(chatroomId)
 		setMemberModalOpened(true)
 	}
@@ -222,12 +226,10 @@ export default function ChatroomPanel() {
 												? theme.primaryColor
 												: undefined
 									}}
-									onClick={() =>
-										dispatch(
-											setSelectedChatroomAction(
-												chatroom.chatroomId
-											)
-										)
+									onClick={() =>{
+										if(isStreaming) return
+										dispatch(setSelectedChatroomAction(chatroom.chatroomId))
+										}
 									}
 								>
 									{chatroom.isGroup && (

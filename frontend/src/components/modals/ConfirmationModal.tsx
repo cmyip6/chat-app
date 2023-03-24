@@ -5,9 +5,11 @@ interface ConfirmationHubProps {
 	isShow: boolean
 	onDelete: () => void
 	onClose: () => void
+	message?: string 
 }
 
 export function ConfirmationModal(props: ConfirmationHubProps) {
+	const defaultMessage = 'This Action cannot be reversed. Are you sure to proceed?'
 	return (
 		<Modal
 			centered
@@ -21,7 +23,7 @@ export function ConfirmationModal(props: ConfirmationHubProps) {
 				color='red'
 				radius='md'
 			>
-				This Action cannot be reversed. Are you sure to proceed?
+				{props.message ?? defaultMessage}
 			</Alert>
 
 			<Group position='center' style={{ paddingTop: '10px' }}>

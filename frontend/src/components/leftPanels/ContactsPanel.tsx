@@ -11,6 +11,7 @@ export default function ContactsPanel() {
 	const dispatch = useAppDispatch()
 	const contactList = useAppSelector((state) => state.contacts.contactsList)
 	const editTarget = useAppSelector((state) => state.contacts.editTarget)
+	const isStreaming = useAppSelector((state) => state.option.isStreaming)
 	const [editName, setEditName] = useState('')
 	const [search, setSearch] = useState('')
 	const [opened, setOpened] = useState(false)
@@ -69,12 +70,14 @@ export default function ContactsPanel() {
 	}, [socket, contactList])
 
 	function handleDelete(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+		if(isStreaming) return
 		e.preventDefault()
 		setOpened(true)
 		setDeleteTarget(parseInt(e.currentTarget.value))
 	}
 
 	function handleBlur(contactId: number) {
+		if(isStreaming) return
 		if (editName && editName.length) {
 			dispatch(editContactName(contactId, editName))
 		}
@@ -82,6 +85,7 @@ export default function ContactsPanel() {
 	}
 
 	function handleDoubleClick(contactId: number, currentName: string) {
+		if(isStreaming) return
 		dispatch(setEditModeAction(contactId))
 		setEditName(currentName)
 	}
@@ -98,6 +102,7 @@ export default function ContactsPanel() {
 	}
 
 	function onDelete() {
+		if(isStreaming) return
 		dispatch(deleteContact(deleteTarget))
 		onClose()
 	}
@@ -139,19 +144,20 @@ export default function ContactsPanel() {
 									shadow='sm'
 									radius='md'
 									onClick={() => {
+										if(isStreaming) return
 										dispatch(
 											createChatroom([
 												contact.contactUsername
 											])
 										)
 									}}
-									onDoubleClick={() =>
+									onDoubleClick={() =>{
 										handleDoubleClick(
 											contact.contactId,
 											contact.nickname ||
 												contact.contactUsername
 										)
-									}
+									}}
 									withBorder
 								>
 									<Group position='left' mt='md' mb='xs'>
@@ -234,20 +240,21 @@ export default function ContactsPanel() {
 								<Card
 									shadow='sm'
 									radius='md'
-									onClick={() =>
+									onClick={() =>{
+										if(isStreaming) return
 										dispatch(
 											createChatroom([
 												contact.contactUsername
 											])
 										)
-									}
-									onDoubleClick={() =>
+									}}
+									onDoubleClick={() =>{
 										handleDoubleClick(
 											contact.contactId,
 											contact.nickname ||
 												contact.contactUsername
 										)
-									}
+									}}
 									withBorder
 								>
 									<Group position='left' mt='md' mb='xs'>
