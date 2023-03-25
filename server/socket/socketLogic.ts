@@ -20,12 +20,14 @@ let userList: User[] = []
 
 export const socketLogic = (socket: Socket) => {
 
-	socket.on('callUser', ({chatroomId, signalData, initiator, name})=> {
-		io.to(`chatroom-${chatroomId}`).emit('callUserResponse', {signal: signalData, initiator, name})
+	console.log(socket.id)
+
+	socket.on('callUser', ({chatroomId, signal, initiator, name})=> {
+		socket.to(`chatroom-${chatroomId}`).emit('callUserResponse', {chatroomId, signal, initiator, name})
 	})
 
-	socket.on('answerCall', (data)=>{
-		io.to(`user-${data.to}`).emit('callAccepted', data.signal)
+	socket.on('answerCall', ({ signal, chatroomId })=>{
+		socket.to(`chatroom-${chatroomId}`).emit('callAccepted', signal)
 	})
 
 	socket.on('getOnlineUserList', ({ socketId, contactsList }) => {
@@ -92,19 +94,21 @@ export const socketLogic = (socket: Socket) => {
 	})
 
 	socket.on('login', (user) => {
+		console.log(user.username+' just logged in')
 		socket.join(`user-${user.userId}`)
 		userList.push(user)
+		console.log(userList)
 		io.emit('loginResponse', user)
 	})
 
 	socket.on('logout', (user) => {
 		userList = userList.filter((user) => user.socketId !== socket.id)
+		console.log(userList)
 		io.emit('logoutResponse', user)
-		socket.disconnect()
 	})
 
 	socket.on('disconnect', () => {
-		const [user] = userList.filter((user) => user.socketId === socket.id)
+		const user = userList.find((user) => user.socketId === socket.id)
 		console.log(user)
 		if (user) {
 			io.emit('logoutResponse', user)

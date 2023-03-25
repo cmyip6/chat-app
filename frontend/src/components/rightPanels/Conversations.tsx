@@ -67,7 +67,7 @@ export default function Conversations() {
 		return () => {
 			socket.off('typingResponse')
 		}
-	}, [contactList, selectedChatroom, username])
+	}, [JSON.stringify(contactList), selectedChatroom, username])
 
 	useEffect(() => {
 		socket.on('deleteMessageResponse', (messageId) => {
@@ -76,7 +76,7 @@ export default function Conversations() {
 		return () => {
 			socket.off('deleteMessageResponse')
 		}
-	}, [messageList])
+	}, [JSON.stringify(messageList)])
 
 	function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault()

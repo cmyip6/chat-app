@@ -1,11 +1,14 @@
 import { MutableRefObject, useEffect, useRef, useState } from 'react'
-import { socket, useAppSelector } from '../../store'
+import { socket, useAppDispatch, useAppSelector } from '../../store'
 import Peer, { SignalData } from 'simple-peer'
-import { showNotification } from '@mantine/notifications'
-import { Container, Grid, Button, Card, Text, Badge, Title, Group } from '@mantine/core'
-import { IconVideoOff, IconVolumeOff } from '@tabler/icons-react'
+import { hideNotification, showNotification } from '@mantine/notifications'
+import { Container, Grid, Button, Card, Badge, Title, Group } from '@mantine/core'
+import { IconCheck, IconVideoOff, IconVolumeOff } from '@tabler/icons-react'
+import { setNotificationPositionAction } from '../../redux/option/slice'
+import { setSelectedChatroomAction } from '../../redux/messages/slice'
 
 export default function Streaming() {
+  const dispatch = useAppDispatch()
   const isStreaming = useAppSelector(state => state.option.isStreaming)
   const roomId = useAppSelector(state => state.messages.selectedChatroom)
   const userId = useAppSelector(state => state.auth.userId)
@@ -16,7 +19,7 @@ export default function Streaming() {
   const connectionRef: MutableRefObject<Peer.Instance | undefined> = useRef(undefined)
 
   const [streamData, setStreamData] = useState<MediaStream | null>(null)
-  const [call, setCall] = useState<{ isReceiving: boolean, signal?: SignalData, initiator?: number, name?: string }>({ isReceiving: false })
+  const [call, setCall] = useState<{ isReceiving?: boolean, signal?: SignalData, initiator?: number, name?: string }>({})
   const [callAccepted, setCallAccepted] = useState(false)
   const [callEnded, setCallEnded] = useState(false)
 
@@ -36,8 +39,18 @@ export default function Streaming() {
         }
       })
 
-    socket.on('callUserResponse', ({ signal, initiator, name }) => {
+    socket.on('callUserResponse', ({chatroomId, signal, initiator, name }) => {
       setCall({ isReceiving: true, signal, initiator, name })
+      
+      showNotification({
+        id: 'calling',
+        autoClose: false,
+        message: `${name} is calling you. Click Icon to answer the call`,
+        icon: <IconCheck onClick={() => {
+          dispatch(setSelectedChatroomAction(chatroomId))
+          hideNotification('calling')
+        }} />,
+      })
     })
 
     return () => {
@@ -45,7 +58,7 @@ export default function Streaming() {
       tracks.forEach(track => track.stop())
       socket.off('callUserResponse')
     }
-  }, [isStreaming])
+  }, [])
 
   const callUser = () => {
     const peer = new Peer({ initiator: true, trickle: false, stream: streamData! });
@@ -67,19 +80,18 @@ export default function Streaming() {
   }
 
   const answerCall = () => {
-    if (!call.signal) return
-    setCallAccepted(true)
+      setCallAccepted(true)
     const peer = new Peer({ initiator: false, trickle: false, stream: streamData! });
 
     peer.on('signal', (data) => {
-      socket.emit('answerCall', { signal: data, to: call.initiator })
+      socket.emit('answerCall', { signal: data, chatroomId: roomId })
     })
 
     peer.on('stream', (currentStream: MediaStream) => {
       userVideo.current!.srcObject = currentStream
     })
 
-    peer.signal(call.signal)
+    peer.signal(call.signal!)
 
     connectionRef.current = peer
   }
@@ -93,7 +105,7 @@ export default function Streaming() {
   return (
     <Container
       className='d-flex flex-column align-items-center gap-2'
-      style={{ height: '100vh', position: 'relative'}}
+      style={{ height: '100vh', position: 'relative' }}
     >
       <Title order={3} weight={100} align="center">
         Video Chat
@@ -102,40 +114,53 @@ export default function Streaming() {
         {
           streamData &&
           <Grid.Col span={6}>
-            <Card 
+            <Card
               className='d-flex flex-column gap-2 justify-content-center align-items-center'
               shadow='lg' padding="lg" radius="md" withBorder>
               <video
                 muted
+                width={500}
                 ref={myVideo}
                 playsInline
                 autoPlay
               />
-              <Group style={{width: '100%'}} position='apart'>
-                <Badge style={{width:'100px'}} size='lg' variant='gradient'>{username}</Badge>
+              <Group style={{ width: '100%' }} position='apart'>
+                <Badge style={{ width: '100px' }} size='lg' variant='gradient'>{username}</Badge>
                 <Group>
-                  <IconVideoOff/>
-                  <IconVolumeOff/>
+                  <IconVideoOff />
+                  <IconVolumeOff />
                 </Group>
               </Group>
             </Card>
           </Grid.Col>
         }
         {
-          callAccepted && !callEnded && (
+          
             <Grid.Col span={6}>
-              <Container>
-                <video
-                  ref={userVideo}
-                  playsInline
-                  autoPlay
-                />
-              </Container>
-            </Grid.Col>
-          )
+            <Card
+              className='d-flex flex-column gap-2 justify-content-center align-items-center'
+              shadow='lg' padding="lg" radius="md" withBorder>
+              <video
+                muted
+                width={500}
+                ref={userVideo}
+                playsInline
+                autoPlay
+              />
+              <Group style={{ width: '100%' }} position='apart'>
+                <Badge style={{ width: '100px' }} size='lg' variant='gradient'>{call.name}</Badge>
+                <Group>
+                  <IconVideoOff />
+                  <IconVolumeOff />
+                </Group>
+              </Group>
+            </Card>
+          </Grid.Col>
+          
         }
       </Grid>
-      {call.isReceiving ? <Button>Disconnect</Button> : <Button>Ready</Button>}
+      {callAccepted && <Button onClick={leaveCall}>Disconnect</Button>}
+      {call.isReceiving ? <Button onClick={answerCall}>Accepted</Button> : <Button onClick={callUser}>Ready</Button>}
 
     </Container>
   )

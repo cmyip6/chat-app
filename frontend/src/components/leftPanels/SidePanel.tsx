@@ -6,7 +6,7 @@ import {
 	IconMessageCircle,
 	IconPhoto
 } from '@tabler/icons-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { logout } from '../../redux/auth/thunk'
 import { PREFIX, useAppDispatch, useAppSelector } from '../../store'
 import ContactsPanel from './ContactsPanel'
@@ -36,9 +36,7 @@ export default function SidePanel() {
 	}, [size])
 
 	// Side Panel resize
-	const mouseDownHandler = (
-		mouseDownEvent: React.MouseEvent<HTMLButtonElement>
-	) => {
+	const mouseDownHandler = useCallback((mouseDownEvent: React.MouseEvent<HTMLButtonElement>) => {
 		const startSize = size
 		const startPosition = mouseDownEvent.pageX
 
@@ -57,26 +55,23 @@ export default function SidePanel() {
 
 		document.body.addEventListener('mousemove', onMouseMove)
 		window.addEventListener('mouseup', onMouseUp, { once: true })
-	}
 
-	const closeModal = () => {
-		setOpened(false)
-	}
+	}, [size])
 
 	const logoutHandler = () => {
-		if(isStreaming){
+		if (isStreaming) {
 			dispatch(setNotificationPositionAction('bottom-left'))
 			showNotification({
 				id: 'logout',
 				title: 'Logout Warning',
-				message: 'Continue logout will stop you streaming, click ! to proceed or close this box to cancel',
-				icon: <IconAlertCircle onClick={()=>{
+				message: 'Continue logout will stop your streaming, click ! to proceed or close this box to cancel',
+				icon: <IconAlertCircle onClick={() => {
 					dispatch(logout())
 					hideNotification('logout')
-				}}/>,
+				}} />,
 				color: 'red',
 				autoClose: 5000,
-				onClose: ()=>dispatch(setNotificationPositionAction('bottom-right'))
+				onClose: () => dispatch(setNotificationPositionAction('bottom-right'))
 			})
 		} else {
 			dispatch(logout())
@@ -102,8 +97,8 @@ export default function SidePanel() {
 					size === 20
 						? setSize(250)
 						: size === 250
-						? setSize(20)
-						: null
+							? setSize(20)
+							: null
 				}
 			>
 				{size === 20 ? (
@@ -151,9 +146,9 @@ export default function SidePanel() {
 			</Tabs>
 			<div className='text-muted small'>Username: {username}</div>
 			<Button className='rounded-0' onClick={() => {
-				if(isStreaming) return
+				if (isStreaming) return
 				setOpened(true)
-				}}>
+			}}>
 				NEW{' '}
 				{messageOpened
 					? MESSAGES_KEY.toUpperCase()
@@ -168,15 +163,16 @@ export default function SidePanel() {
 			</Button>
 
 			<Modal
+				centered
 				opened={opened}
-				onClose={closeModal}
-				size='auto'
+				onClose={()=>setOpened(false)}
+				size='md'
 				title={'New ' + activeTab}
 			>
 				{messageOpened ? (
-					<NewChatroomModal onClose={closeModal} />
+					<NewChatroomModal onClose={()=>setOpened(false)} />
 				) : (
-					<NewContactModal onClose={closeModal} />
+					<NewContactModal onClose={()=>setOpened(false)} />
 				)}
 			</Modal>
 		</div>

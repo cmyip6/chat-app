@@ -1,6 +1,7 @@
 import { Button, Checkbox, Input, Modal } from '@mantine/core'
 import { showNotification } from '@mantine/notifications'
-import { useState } from 'react'
+import { IconSearch, IconX } from '@tabler/icons-react'
+import { useMemo, useState } from 'react'
 import { addMember } from '../../redux/messages/thunk'
 import { useAppDispatch, useAppSelector } from '../../store'
 
@@ -14,11 +15,13 @@ export default function NewMemberModal(props: {
 	const [value, setValue] = useState<string[]>([])
 	const [searchName, setSearchName] = useState('')
 
-	const filteredContactList = contactList?.filter(
-		(contact) =>
-			contact.nickname?.includes(searchName) ||
-			contact.contactUsername?.includes(searchName)
-	)
+	const filteredContactList = useMemo(()=>{
+		return contactList?.filter(
+			(contact) =>
+				contact.nickname?.includes(searchName) ||
+				contact.contactUsername?.includes(searchName)
+		)
+	},[JSON.stringify(contactList), searchName])
 
 	function onClick() {
 		if (value.length) {
@@ -39,13 +42,19 @@ export default function NewMemberModal(props: {
 			centered
 			opened={props.isShow}
 			onClose={props.onClose}
-			size='auto'
+			size='xs'
 			title='Add New Member'
 		>
 			<Input.Wrapper label='Search' style={{ marginBottom: '10px' }}>
 				<Input
 					value={searchName}
 					onChange={(e) => setSearchName(e.currentTarget.value)}
+					icon={<IconSearch size={20} />}
+					rightSection={
+						searchName.length ? (
+							<IconX size={16} onClick={() => setSearchName('')} />
+						) : undefined
+					}
 				/>
 			</Input.Wrapper>
 			<Input.Wrapper

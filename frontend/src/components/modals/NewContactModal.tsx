@@ -22,8 +22,7 @@ export default function NewContactModal(props: ModalProps) {
 
 	const waitTime = 3000
 	let timer: ReturnType<typeof setTimeout>
-	// eslint-disable-next-line
-	const pattern = /[.,\/#!@$%\^&\*;:{}=\-_`~()\s]/g
+	const pattern = /[,/#!$%^&*;:{}=\-_`~()\s]/g
 
 	function keyDownHandler() {
 		setLoading(true)

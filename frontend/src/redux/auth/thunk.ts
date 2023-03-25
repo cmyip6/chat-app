@@ -26,13 +26,13 @@ export function login(username: string, password: string) {
 				token: result.token
 			}
 			localStorage.setItem(`${PREFIX}token`, result.token)
-			dispatch(loginAction(payload))
-
 			socket.emit('login', {
 				username: result.username,
 				userId: result.userId,
 				socketId: socket.id
 			})
+
+			dispatch(loginAction(payload))
 		} else {
 			dispatch(logoutAction())
 		}

@@ -1,6 +1,7 @@
 import { Button, Checkbox, Input } from '@mantine/core'
 import { showNotification } from '@mantine/notifications'
-import { useEffect, useRef, useState } from 'react'
+import { IconSearch, IconX } from '@tabler/icons-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createChatroom } from '../../redux/messages/thunk'
 import { useAppDispatch, useAppSelector } from '../../store'
 
@@ -16,16 +17,18 @@ export default function NewChatroomModal(props: ModalProps) {
 	const [searchName, setSearchName] = useState('')
 	const [checked, setChecked] = useState(false)
 
-	const filteredContactList = contactList!.filter(
-		(contact) =>
-			contact.nickname?.includes(searchName) ||
-			contact.contactUsername?.includes(searchName)
-	)
+	const filteredContactList = useMemo(() => {
+		return contactList?.filter(
+			(contact) =>
+				contact.nickname?.includes(searchName) ||
+				contact.contactUsername?.includes(searchName)
+		)
+	}, [JSON.stringify(contactList), searchName])
 
 	useEffect(() => {
 		if (!contactList?.length) {
 			showNotification({
-				title: 'Create Message Notification',
+				title: 'Create Chatroom Notification',
 				message: 'No Contacts Available, Please Add New Contacts First'
 			})
 			props.onClose()
@@ -38,7 +41,7 @@ export default function NewChatroomModal(props: ModalProps) {
 				setChecked(true)
 			} else {
 				showNotification({
-					title: 'Create Message Notification',
+					title: 'Create Chatroom Notification',
 					message: 'Select at least One contact'
 				})
 			}
@@ -57,6 +60,12 @@ export default function NewChatroomModal(props: ModalProps) {
 					<Input
 						value={searchName}
 						onChange={(e) => setSearchName(e.currentTarget.value)}
+						icon={<IconSearch size={20} />}
+						rightSection={
+							searchName.length ? (
+								<IconX size={16} onClick={() => setSearchName('')} />
+							) : undefined
+						}
 					/>
 				</Input.Wrapper>
 			)}

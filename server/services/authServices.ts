@@ -2,7 +2,7 @@ import { Knex } from 'knex'
 import bcrypt from 'bcryptjs'
 
 export class AuthService {
-	constructor(private knex: Knex) {}
+	constructor(private knex: Knex) { }
 
 	async login(username: string, password: string) {
 		const [user] = await this.knex('users').where('username', username)
@@ -17,6 +17,9 @@ export class AuthService {
 		const [user] = await this.knex('users')
 			.where('username', username)
 			.where('id', id)
+
+		delete user.password
+		
 		return user
 	}
 

@@ -46,7 +46,7 @@ export default function Messages(props: { scroll: boolean, scrollEnd: () => void
         if (lastMessageRef.current) {
             lastMessageRef.current.scrollIntoView()
         }
-    }, [messageList])
+    }, [JSON.stringify(messageList)])
 
     useEffect(() => {
         socket.on('deleteMessageResponse', (messageId) => {
@@ -55,13 +55,13 @@ export default function Messages(props: { scroll: boolean, scrollEnd: () => void
         return () => {
             socket.off('deleteMessageResponse')
         }
-    }, [messageList])
+    }, [JSON.stringify(messageList)])
 
     useEffect(() => {
         if (selectedChatroom) {
             dispatch(getChatroomList(userId))
         }
-    }, [selectedChatroom])
+    }, [selectedChatroom, userId])
 
     function handleAddContact(targetId: number) {
         dispatch(setTargetUserAction(targetId))

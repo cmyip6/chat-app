@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { getContactsListAction } from '../../redux/contacts/slice'
+import { getContactsListAction, toggleOnlineAction } from '../../redux/contacts/slice'
 import { getContactList } from '../../redux/contacts/thunk'
 import { getChatroomList } from '../../redux/messages/thunk'
 import { socket, useAppDispatch, useAppSelector } from '../../store'
@@ -12,6 +12,7 @@ export default function Home() {
 	const login = useAppSelector((state) => state.auth.isLoggedIn)
 	const userId = useAppSelector((state) => state.auth.userId)
 	const contactList = useAppSelector((state) => state.contacts.contactsList)
+	const chatroomList = useAppSelector((state) => state.messages.chatroomList)
 
 	useEffect(() => {
 		if (login && userId) {
@@ -21,7 +22,7 @@ export default function Home() {
 	}, [login, userId])
 
 	useEffect(() => {
-		if (contactList === null) return
+		if (contactList === null || contactList?.length === 0) return
 		socket.on('getOnlineUserListResponse', (contactList) => {
 			dispatch(getContactsListAction(contactList))
 		})
@@ -29,12 +30,17 @@ export default function Home() {
 		return () => {
 			socket.off('getOnlineUserListResponse')
 		}
-	}, [contactList])
+	}, [JSON.stringify(contactList)])
 
 	return (
 		<div className='d-flex' style={{ height: '100vh' }}>
-			<SidePanel />
-			<Conversations />
+			{
+				contactList !== null && chatroomList !== null &&
+				<>
+					<SidePanel />
+					<Conversations />
+				</>
+			}
 		</div>
 	)
 }

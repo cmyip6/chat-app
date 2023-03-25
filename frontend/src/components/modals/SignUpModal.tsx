@@ -15,10 +15,17 @@ export default function SignUpModal(props: SignUpModalProps) {
 	const usernameRef = useRef<HTMLInputElement>(null)
 	const passwordRef = useRef<HTMLInputElement>(null)
 	const confirmPasswordRef = useRef<HTMLInputElement>(null)
+	const pattern = /[,/#!$%^&*;:{}=\-_`~()\s]/g
 
 	function handleSubmit(e: React.SyntheticEvent) {
 		e.preventDefault()
-		if (
+		if (pattern.test(usernameRef.current?.value!)) {
+			showNotification({
+				title: 'Registration notification',
+				message: 'Username cannot contain special characters expect " . @ "'
+			})
+			return
+		} else if (
 			usernameRef.current?.value.length! >= 5 &&
 			passwordRef.current?.value.length &&
 			passwordRef.current.value === confirmPasswordRef.current?.value

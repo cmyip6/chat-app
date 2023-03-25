@@ -1,6 +1,6 @@
 import { Badge, Card, Input, Tooltip, useMantineTheme } from '@mantine/core'
 import { IconCheck, IconSearch, IconUserPlus, IconX } from '@tabler/icons-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
 	editChatroomModeAction,
 	setMessageColorAction,
@@ -19,21 +19,59 @@ import NewMemberModal from '../modals/NewMemberModal'
 
 export default function ChatroomPanel() {
 	const dispatch = useAppDispatch()
+	const theme = useMantineTheme()
+
 	const chatroomList = useAppSelector((state) => state.messages.chatroomList)
+	const colorList = chatroomList?.map(state=>state.myMessageColor)
 	const userId = useAppSelector((state) => state.auth.userId)
 	const username = useAppSelector((state) => state.auth.username)
 	const selected = useAppSelector((state) => state.messages.selectedChatroom)
 	const editMode = useAppSelector((state) => state.messages.editChatroomName)
 	const isStreaming = useAppSelector((state) => state.option.isStreaming)
+	
 	const [editName, setEditName] = useState('')
 	const [search, setSearch] = useState('')
 	const [opened, setOpened] = useState(false)
 	const [memberModalOpened, setMemberModalOpened] = useState(false)
 	const [targetChatroomId, setTargetChatroomId] = useState(0)
 	const [deleteTarget, setDeleteTarget] = useState(0)
-	const theme = useMantineTheme()
-	const filteredChatroomList =
-		chatroomList &&
+
+	useEffect(() => {
+		socket.on('sendMessageResponse', (chatroomId) => {
+			dispatch(getMessages(chatroomId))
+		})
+		socket.on('toggleParticipantStatusResponse', (data) => {
+			dispatch(
+				toggleParticipantStatusAction({
+					chatroomId: data.chatroomId,
+					participantId: data.participantId,
+					isDeleted: data.isDeleted
+				})
+			)
+		})
+
+		return () => {
+			socket.off('sendMessageResponse')
+			socket.off('toggleParticipantStatusResponse')
+			dispatch(editChatroomModeAction(0))
+			setEditName('')
+			setSearch('')
+		}
+	}, [])
+
+	useEffect(() => {
+		if (!userId) return
+		socket.on('createChatroomResponse', (chatroom) => {
+			dispatch(getChatroomList(userId))
+		})
+		return () => {
+			socket.off('createChatroomResponse')
+		}
+	}, [userId])
+
+	//manage search function
+	const filteredChatroomList = useMemo(()=>{
+		return chatroomList &&
 		chatroomList.filter(
 			(chatroom) =>
 				(chatroom.chatroomName &&
@@ -51,6 +89,7 @@ export default function ChatroomPanel() {
 							.includes(search.toLowerCase())
 				)
 		)
+	}, [JSON.stringify(chatroomList), search])
 
 	//get saved message color from local storage
 	useEffect(() => {
@@ -68,49 +107,8 @@ export default function ChatroomPanel() {
 				)
 			}
 		}
-	}, [chatroomList])
+	}, [JSON.stringify(colorList)])
 
-	useEffect(() => {
-		return () => {
-			dispatch(editChatroomModeAction(0))
-			setEditName('')
-			setSearch('')
-		}
-	}, [])
-
-	useEffect(() => {
-		if (!userId) return
-		socket.on('createChatroomResponse', (chatroom) => {
-			dispatch(getChatroomList(userId))
-		})
-		return () => {
-			socket.off('createChatroomResponse')
-		}
-	}, [chatroomList])
-
-	useEffect(() => {
-		socket.on('sendMessageResponse', (chatroomId) => {
-			dispatch(getMessages(chatroomId))
-		})
-		return () => {
-			socket.off('sendMessageResponse')
-		}
-	}, [chatroomList])
-
-	useEffect(() => {
-		socket.on('toggleParticipantStatusResponse', (data) => {
-			dispatch(
-				toggleParticipantStatusAction({
-					chatroomId: data.chatroomId,
-					participantId: data.participantId,
-					isDeleted: data.isDeleted
-				})
-			)
-		})
-		return () => {
-			socket.off('toggleParticipantStatusResponse')
-		}
-	}, [chatroomList])
 
 	function handleBlur(
 		chatroomId: number,

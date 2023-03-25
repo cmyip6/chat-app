@@ -1,6 +1,6 @@
 import { Button, Card, Divider, Group, Input } from '@mantine/core'
 import { IconPointFilled, IconSearch, IconX } from '@tabler/icons-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { setEditModeAction, toggleOnlineAction } from '../../redux/contacts/slice'
 import { deleteContact, editContactName } from '../../redux/contacts/thunk'
 import { createChatroom } from '../../redux/messages/thunk'
@@ -9,28 +9,30 @@ import { ConfirmationModal } from '../modals/ConfirmationModal'
 
 export default function ContactsPanel() {
 	const dispatch = useAppDispatch()
+
 	const contactList = useAppSelector((state) => state.contacts.contactsList)
 	const editTarget = useAppSelector((state) => state.contacts.editTarget)
 	const isStreaming = useAppSelector((state) => state.option.isStreaming)
+
 	const [editName, setEditName] = useState('')
 	const [search, setSearch] = useState('')
 	const [opened, setOpened] = useState(false)
 	const [deleteTarget, setDeleteTarget] = useState(0)
 
-	const filteredContactList =
-		contactList &&
+	const filteredContactList = useMemo(()=>{
+		return contactList &&
 		contactList.filter(
 			(contact) =>
 				contact.contactUsername.includes(search) ||
 				contact.nickname?.toLowerCase().includes(search)
 		)
+	},[JSON.stringify(contactList), search])
 
 	useEffect(() => {
-		if (contactList === null) return
 		socket.on('loginResponse', (user) => {
 			console.log('loginResponse')
 			if (
-				contactList.find(
+				contactList?.find(
 					(contact) => contact.contactUsername === user.username
 				)
 			) {
@@ -42,17 +44,10 @@ export default function ContactsPanel() {
 				)
 			}
 		})
-		return () => {
-			socket.off('loginResponse')
-		}
-	}, [socket, contactList])
-
-	useEffect(() => {
-		if (!contactList) return
 		socket.on('logoutResponse', (user) => {
 			console.log('logoutResponse')
 			if (
-				contactList.find(
+				contactList?.find(
 					(contact) => contact.contactUsername === user.username
 				)
 			) {
@@ -65,9 +60,10 @@ export default function ContactsPanel() {
 			}
 		})
 		return () => {
+			socket.off('loginResponse')
 			socket.off('logoutResponse')
 		}
-	}, [socket, contactList])
+	}, [])
 
 	function handleDelete(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
 		if(isStreaming) return
