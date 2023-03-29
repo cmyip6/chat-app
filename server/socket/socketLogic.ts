@@ -26,8 +26,12 @@ export const socketLogic = (socket: Socket) => {
 		socket.to(`chatroom-${chatroomId}`).emit('callUserResponse', {chatroomId, signal, initiator, name})
 	})
 
-	socket.on('answerCall', ({ signal, chatroomId })=>{
-		socket.to(`chatroom-${chatroomId}`).emit('callAccepted', signal)
+	socket.on('cancelCall', (chatroomId) => {
+		socket.to(`chatroom-${chatroomId}`).emit('cancelCallResponse', {chatroomId})
+	})
+
+	socket.on('answerCall', ({ signal, chatroomId, username })=>{
+		socket.to(`chatroom-${chatroomId}`).emit('callAccepted', { signal, chatroomId, username })
 	})
 
 	socket.on('getOnlineUserList', ({ socketId, contactsList }) => {
@@ -96,20 +100,22 @@ export const socketLogic = (socket: Socket) => {
 	socket.on('login', (user) => {
 		console.log(user.username+' just logged in')
 		socket.join(`user-${user.userId}`)
-		userList.push(user)
+		if (!userList.find(onlineUser => onlineUser.userId === user.userId)){
+			userList.push(user)
+		}
 		console.log(userList)
 		io.emit('loginResponse', user)
 	})
 
 	socket.on('logout', (user) => {
 		userList = userList.filter((user) => user.socketId !== socket.id)
+		console.log(user.username+' just logged out')
 		console.log(userList)
 		io.emit('logoutResponse', user)
 	})
 
 	socket.on('disconnect', () => {
 		const user = userList.find((user) => user.socketId === socket.id)
-		console.log(user)
 		if (user) {
 			io.emit('logoutResponse', user)
 			userList = userList.filter((user) => user.socketId !== socket.id)

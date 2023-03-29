@@ -119,7 +119,7 @@ export default function Messages(props: { scroll: boolean, scrollEnd: () => void
                                     }`}
                             >
                                 {/* Message */}
-                                <HoverCard shadow='xs' openDelay={500}>
+                                <HoverCard disabled={message.isDeleted || message.isSystemMessage} shadow='xs' openDelay={500}>
                                     <HoverCard.Target>
                                         <Container
                                             style={{

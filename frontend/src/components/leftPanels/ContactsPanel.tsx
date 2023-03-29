@@ -1,4 +1,4 @@
-import { Button, Card, Divider, Group, Input } from '@mantine/core'
+import { Button, Card, Divider, Group, Input, Tooltip } from '@mantine/core'
 import { IconPointFilled, IconSearch, IconX } from '@tabler/icons-react'
 import { useEffect, useMemo, useState } from 'react'
 import { setEditModeAction, toggleOnlineAction } from '../../redux/contacts/slice'
@@ -19,14 +19,14 @@ export default function ContactsPanel() {
 	const [opened, setOpened] = useState(false)
 	const [deleteTarget, setDeleteTarget] = useState(0)
 
-	const filteredContactList = useMemo(()=>{
+	const filteredContactList = useMemo(() => {
 		return contactList &&
-		contactList.filter(
-			(contact) =>
-				contact.contactUsername.includes(search) ||
-				contact.nickname?.toLowerCase().includes(search)
-		)
-	},[JSON.stringify(contactList), search])
+			contactList.filter(
+				(contact) =>
+					contact.contactUsername.includes(search) ||
+					contact.nickname?.toLowerCase().includes(search)
+			)
+	}, [JSON.stringify(contactList), search])
 
 	useEffect(() => {
 		socket.on('loginResponse', (user) => {
@@ -66,14 +66,14 @@ export default function ContactsPanel() {
 	}, [])
 
 	function handleDelete(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
-		if(isStreaming) return
+		if (isStreaming) return
 		e.preventDefault()
 		setOpened(true)
 		setDeleteTarget(parseInt(e.currentTarget.value))
 	}
 
 	function handleBlur(contactId: number) {
-		if(isStreaming) return
+		if (isStreaming) return
 		if (editName && editName.length) {
 			dispatch(editContactName(contactId, editName))
 		}
@@ -81,7 +81,7 @@ export default function ContactsPanel() {
 	}
 
 	function handleDoubleClick(contactId: number, currentName: string) {
-		if(isStreaming) return
+		if (isStreaming) return
 		dispatch(setEditModeAction(contactId))
 		setEditName(currentName)
 	}
@@ -98,7 +98,7 @@ export default function ContactsPanel() {
 	}
 
 	function onDelete() {
-		if(isStreaming) return
+		if (isStreaming) return
 		dispatch(deleteContact(deleteTarget))
 		onClose()
 	}
@@ -140,30 +140,30 @@ export default function ContactsPanel() {
 									shadow='sm'
 									radius='md'
 									onClick={() => {
-										if(isStreaming) return
+										if (isStreaming) return
 										dispatch(
 											createChatroom([
 												contact.contactUsername
 											])
 										)
 									}}
-									onDoubleClick={() =>{
+									onDoubleClick={() => {
 										handleDoubleClick(
 											contact.contactId,
 											contact.nickname ||
-												contact.contactUsername
+											contact.contactUsername
 										)
 									}}
 									withBorder
 								>
 									<Group position='left' mt='md' mb='xs'>
-										<IconPointFilled
+										{editTarget !== contact.contactId && <IconPointFilled
 											style={{
 												color: contact.isOnline
 													? 'green'
 													: 'darkred'
 											}}
-										/>
+										/>}
 										{editTarget === contact.contactId ? (
 											<Input.Wrapper label='Change Name'>
 												<Input
@@ -189,8 +189,12 @@ export default function ContactsPanel() {
 												/>
 											</Input.Wrapper>
 										) : (
-											contact.nickname ||
-											contact.contactUsername
+											<Tooltip label={'Double click to edit'}>
+												<div>
+													{contact.nickname ||
+														contact.contactUsername}
+												</div>
+											</Tooltip>
 										)}
 									</Group>
 
@@ -236,31 +240,31 @@ export default function ContactsPanel() {
 								<Card
 									shadow='sm'
 									radius='md'
-									onClick={() =>{
-										if(isStreaming) return
+									onClick={() => {
+										if (isStreaming) return
 										dispatch(
 											createChatroom([
 												contact.contactUsername
 											])
 										)
 									}}
-									onDoubleClick={() =>{
+									onDoubleClick={() => {
 										handleDoubleClick(
 											contact.contactId,
 											contact.nickname ||
-												contact.contactUsername
+											contact.contactUsername
 										)
 									}}
 									withBorder
 								>
 									<Group position='left' mt='md' mb='xs'>
-										<IconPointFilled
+										{editTarget !== contact.contactId && <IconPointFilled
 											style={{
 												color: contact.isOnline
 													? 'green'
 													: 'darkred'
 											}}
-										/>
+										/>}
 										{editTarget === contact.contactId ? (
 											<Input.Wrapper label='Change Name'>
 												<Input
@@ -286,8 +290,12 @@ export default function ContactsPanel() {
 												/>
 											</Input.Wrapper>
 										) : (
-											contact.nickname ||
-											contact.contactUsername
+											<Tooltip label={'Double click to edit'}>
+												<div>
+													{contact.nickname ||
+														contact.contactUsername}
+												</div>
+											</Tooltip>
 										)}
 									</Group>
 
